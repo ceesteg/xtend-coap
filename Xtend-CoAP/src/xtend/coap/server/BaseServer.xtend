@@ -1,4 +1,4 @@
-package xtend.coap.endpoint
+package xtend.coap.server
 
 import java.io.ByteArrayOutputStream
 import java.net.SocketException
