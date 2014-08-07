@@ -77,14 +77,7 @@ class Request extends Message {
 				response.setType(getType)
 			}
 		}		
-		var observeOpt = getFirstOption(Option.OBSERVE)
-		if (observeOpt != null && !response.hasOption(Option.OBSERVE)) {
-			var secs = ((System.currentTimeMillis - startTime) / 1000).bitwiseAnd(0xFFFF).intValue
-			response.setOption(new Option(secs, Option.OBSERVE))
-			if (response.isConfirmable) {
-				response.setType(MessageType.Non_Confirmable)
-			}
-		}
+		
 		if (communicator != null) try {
 			communicator.sendMessage(response)
 		} catch (IOException e) {

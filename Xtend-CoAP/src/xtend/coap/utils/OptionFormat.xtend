@@ -1,9 +1,9 @@
 package xtend.coap.utils
 
 enum OptionFormat {
-	integer,
-	string,
+	empty,
 	opaque,
-	unknown,
-	error
+	uint,
+	string,
+	unknown
 }

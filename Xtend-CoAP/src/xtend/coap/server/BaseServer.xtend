@@ -91,11 +91,6 @@ class BaseServer implements MessageReceiver, MessageHandler {
 			var resource = getResource(resourceIdentifier);
 			if (resource != null) {
 				request.dispat(resource)
-				if (request instanceof GetRequest && request.hasOption(Option.OBSERVE)) {
-					resource.addObserveRequest(request as GetRequest)
-				} else if (resource.isObserved(request.endpointID)) {
-					resource.removeObserveRequest(request.endpointID)
-				}	
 			} else if (request instanceof PutRequest) {
 				createByPut(request as PutRequest)
 			} else {

@@ -1,9 +1,9 @@
 package xtend.coap.message.resource
 
-import xtend.coap.utils.MediaType
 import xtend.coap.message.request.GetRequest
 import xtend.coap.message.response.Response
 import xtend.coap.utils.Code
+import xtend.coap.utils.ContentFormat
 
 class DiscoveryResource extends ReadOnlyResource {
 	
@@ -19,7 +19,7 @@ class DiscoveryResource extends ReadOnlyResource {
 	new(Resource root) {
 		super(DEFAULT_IDENTIFIER)
 		this.root = root
-		setContentTypeCode(MediaType.LINK_FORMAT)
+		setContentTypeCode(ContentFormat.LINK_FORMAT)
 	}
 	
 	@Override

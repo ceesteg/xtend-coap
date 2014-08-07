@@ -14,7 +14,7 @@ class TransactionLayer extends UpperLayer {
 	Map<Integer, Request> tokenMap = new HashMap<Integer, Request>
 	int currentToken
 	
-	new () {
+	new (){
 		this.currentToken = 0xCAFE
 	}
 

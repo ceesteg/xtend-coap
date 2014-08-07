@@ -56,12 +56,4 @@ class OptionTest {
 		assertTrue(optTwoBytes.equals(optTwoBytesRef))
 		assertFalse(optTwoBytes.equals(optOneByte))
 	}
-	
-	def static String getHexString(byte[] b) throws Exception {
-		var result = ""
-		for (var i=0; i < b.length; i++) {
-		    result += Integer.toString(b.get(i).bitwiseAnd(0xff) + 0x100, 16).substring(1)
-		}
-		return result
-	}
 }

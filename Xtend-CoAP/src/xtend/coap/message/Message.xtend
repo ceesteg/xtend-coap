@@ -15,7 +15,7 @@ import xtend.coap.utils.Option
 import xtend.coap.utils.MessageType
 import xtend.coap.utils.Code
 import xtend.coap.utils.DatagramUtils
-import xtend.coap.utils.MediaType
+import xtend.coap.utils.ContentFormat
 
 class Message {
 	
@@ -146,7 +146,7 @@ class Message {
 		for (Option opt : getOptionList) {
 			var optionDelta = opt.getOptionNumber - lastOptionNumber
 			while (optionDelta > MAX_OPTIONDELTA) {
-				var fencepostNumber = Option.nextFencepost(lastOptionNumber)
+				var fencepostNumber = Option.nextJump(lastOptionNumber)
 				var fencepostDelta = fencepostNumber - lastOptionNumber
 				if (fencepostDelta <= 0) {
 					System.err.println("Fencepost liveness violated: delta = " + fencepostDelta)
@@ -220,7 +220,7 @@ class Message {
 		for (var i = 0; i < optionCount; i++) {
 			var optionDelta = datagram.read(OPTIONDELTA_BITS)
 			currentOption += optionDelta
-			if (Option.isFencepost(currentOption))
+			if (Option.jump(currentOption))
 			{
 				datagram.read(OPTIONLENGTH_BASE_BITS)
 			} else {
@@ -292,12 +292,12 @@ class Message {
 				e.printStackTrace
 				return
 			}
-			setOption(new Option(mediaType, Option.CONTENT_TYPE))
+			setOption(new Option(mediaType, Option.CONTENT_FORMAT))
 		}
 	}
 	
 	def void setPayload(String payload) {
-		setPayload(payload, MediaType.PLAIN)
+		setPayload(payload, ContentFormat.PLAIN)
 	}
 	
 	/*
@@ -663,7 +663,7 @@ class Message {
 	}
 	
 	def hasFormat(int mediaType) {
-		var opt = getFirstOption(Option.CONTENT_TYPE)
+		var opt = getFirstOption(Option.CONTENT_FORMAT)
 		if (opt != null) {
 			return opt.getIntValue == mediaType
 		} else{

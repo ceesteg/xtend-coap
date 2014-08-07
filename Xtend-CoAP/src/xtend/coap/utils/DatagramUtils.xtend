@@ -16,7 +16,7 @@ class DatagramUtils {
 	 * @param byteArray The byte array to read from. If is null initializes byteOutputStream, else byteInputStream.
 	 * 
 	 */
-	new(byte[] byteArray) {
+	new (byte[] byteArray) {
 		if (byteArray == null) {
 			byteOutputStream = new ByteArrayOutputStream
 			cByte = 0.byteValue

@@ -23,7 +23,7 @@ class TransferLayer extends UpperLayer {
 		var m   = value.operator_doubleGreaterThan(3).bitwiseAnd(0x1)
 		var num = value.operator_doubleGreaterThan(4)
 		var size = 1.operator_doubleLessThan(szx + 4)
-		System.out.println("NUM: " + num + ", SZX: " + szx + " (" + size + " bytes), M: " + m)
+		System.out.printf("NUM: %d, SZX: %d (%d bytes), M: %d", num, szx, size, m)
 	}
 	
 	def static Option encodeBlock(int num, int szx, int m) {
@@ -31,7 +31,7 @@ class TransferLayer extends UpperLayer {
 		value = value.bitwiseOr(szx.bitwiseAnd(0x7))    
 		value = value.bitwiseOr(m.bitwiseAnd(0x1).operator_doubleLessThan(3))
 		value = value.bitwiseOr(num.operator_doubleLessThan(4))
-		return new Option(value, Option.BLOCK)
+		return new Option(value, Option.BLOCK1)
 	}
 
 	def private static Message getBlock(Message msg, int num, int szx) {
@@ -89,7 +89,7 @@ class TransferLayer extends UpperLayer {
 	
 	@Override
 	override protected void doReceiveMessage(Message msg) {
-		var blockOpt = msg.getFirstOption(Option.BLOCK)
+		var blockOpt = msg.getFirstOption(Option.BLOCK1)
 		if (blockOpt != null) {
 			var value = blockOpt.getIntValue
 			var szx = value.bitwiseAnd(0x7)
