@@ -13,7 +13,7 @@ class MessageTest {
 	def void testMessage() {
 		var msg = new Message;
 		msg.setCode(Code.METHOD_GET);
-		msg.setType(MessageType.Confirmable);
+		msg.setType(MessageType.CONFIRMABLE);
 		msg.setID(12345);
 		msg.setPayload("some payload".getBytes);
 		System.out.println(msg.toString);		
@@ -30,7 +30,7 @@ class MessageTest {
 	def void testOptionMessage() {
 		var msg = new Message;		
 		msg.setCode(Code.METHOD_GET);
-		msg.setType(MessageType.Confirmable);
+		msg.setType(MessageType.CONFIRMABLE);
 		msg.setID(12345);
 		msg.setPayload("hallo".getBytes);
 		msg.addOption(new Option ("a".getBytes, 1));
@@ -48,7 +48,7 @@ class MessageTest {
 	def void testExtendedOptionMessage() {
 		var msg = new Message ;
 		msg.setCode(Code.METHOD_GET);
-		msg.setType(MessageType.Confirmable);
+		msg.setType(MessageType.CONFIRMABLE);
 		msg.setID(12345);
 		msg.addOption(new Option ("c".getBytes, 211));
 		var data = msg.toByteArray;

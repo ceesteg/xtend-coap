@@ -17,8 +17,6 @@ class Option {
 	val public static URI_QUERY           = 15
 	val public static ACCEPT              = 17
 	val public static LOCATION_QUERY      = 20
-	val public static BLOCK1              = 23  // Blockwise transfers in CoAP, draft-ietf-core-block-14
-	val public static BLOCK2              = 27  // Blockwise transfers in CoAP, draft-ietf-core-block-14
 	val public static PROXY_URI           = 35
 	val public static PROXY_SCHEME        = 39
 	val public static SIZE1               = 60
@@ -45,28 +43,7 @@ class Option {
 	}
 	
 	def private void setIntValue(int valueAux) {
-		var neededBytes = 4
-		if (valueAux == 0) {
-			value = ByteBuffer.allocate(1)
-			value.put(0.byteValue)
-		} else {
-			var aux = ByteBuffer.allocate(4)
-			aux.putInt(valueAux)
-			var break = false
-			var i = 3
-			while (i >= 0 && break == false) {
-				if (aux.get(3-i) == 0x00) {
-					neededBytes--
-				} else {
-					break = true
-				}
-				i--
-			}
-			value = ByteBuffer.allocate(neededBytes)
-			for (var n = neededBytes - 1; n >= 0; n--) {
-				value.put(aux.get(3-n))
-			}
-		}
+		value = HexUtils.bufferIntValue(valueAux)
 	}
 	
 	/*
@@ -183,16 +160,7 @@ class Option {
 	 * @return The integer representation of the current option's data
 	 */
 	def getIntValue () {
-		var byteLength = value.capacity
-		var temp = ByteBuffer.allocate(4)
-		for (var i=0; i < (4-byteLength); i++) {
-			temp.put(0.byteValue)
-		}
-		for (var i=0; i < byteLength; i++) {
-			temp.put(value.get(i))
-		}
-		var valueAux = temp.getInt(0)
-		return valueAux
+		return HexUtils.getIntValue(value)
 	}
 	
 	/*
@@ -203,25 +171,7 @@ class Option {
 	def getValue () {
 		return value
 	}
-	
-	def private static String hex(byte[] data) {
-		val digits = "0123456789ABCDEF"
-		if (data != null) {
-			var length = data.length
-			var builder = new StringBuilder(length * 3);
-			for (var i = 0; i < length; i++) {
-				builder.append(digits.charAt(i.operator_doubleGreaterThan(4).bitwiseAnd(0xF)))
-				builder.append(digits.charAt(data.get(i).bitwiseAnd(0xF)))
-				if (i < length-1) {
-					builder.append(' ')
-				}
-			}
-			return builder.toString
-		} else {
-			return null
-		}
-	}
-	
+
 	/*
 	 * Returns a human-readable string representation of the option's value
 	 * 
@@ -230,11 +180,11 @@ class Option {
 	def getDisplayValue() {
 		switch (optionNr) {
 			case IF_MATCH:
-				return hex(getRawValue)
+				return HexUtils.hex(getRawValue)
 			case URI_HOST:
 				return getStringValue
 			case ETAG:
-				return hex(getRawValue)
+				return HexUtils.hex(getRawValue)
 			case IF_NONE_MATCH:
 				return ""
 			case URI_PORT:
@@ -243,8 +193,8 @@ class Option {
 				return getStringValue
 			case URI_PATH:
 				return getStringValue
-			case CONTENT_FORMAT:
-				return String.valueOf(getIntValue)
+			case CONTENT_FORMAT: 
+				return ContentFormat.toString(getIntValue)
 			case MAX_AGE:
 				return getIntValue + "s"
 			case URI_QUERY:
@@ -253,10 +203,6 @@ class Option {
 				return String.valueOf(getIntValue)
 			case LOCATION_QUERY:
 				return getStringValue
-			case BLOCK1:
-				return String.valueOf(getIntValue)
-			case BLOCK2:
-				return String.valueOf(getIntValue)
 			case PROXY_URI:
 				return getStringValue
 			case PROXY_SCHEME:
@@ -264,18 +210,10 @@ class Option {
 			case SIZE1:
 				return String.valueOf(getIntValue)
 			case TOKEN:
-				return hex(getRawValue)
+				return HexUtils.hex(getRawValue)
 			default:
-				return hex(getRawValue)
+				return HexUtils.hex(getRawValue)
 		}
-	}
-
-	def static boolean jump(int optionNumber) {
-		return optionNumber % OPTION_JUMP == 0
-	}
-	
-	def static int nextJump(int optionNumber) {
-		return (optionNumber / OPTION_JUMP + 1) * OPTION_JUMP
 	}
 
 	def static String toString(int optionNumber) {
@@ -304,10 +242,6 @@ class Option {
 				return "Accept"
 			case LOCATION_QUERY:
 				return "Location-Query"
-			case BLOCK1:
-				return "Block 1"
-			case BLOCK2:
-				return "Block 2"
 			case PROXY_URI:
 				return "Proxy-Uri"
 			case PROXY_SCHEME:
@@ -324,47 +258,43 @@ class Option {
 	def static OptionFormat getFormatByNr (int optionNumber) {
 		switch (optionNumber) {
 			case IF_MATCH:
-				return OptionFormat.opaque
+				return OptionFormat.OPAQUE
 			case URI_HOST:
-				return OptionFormat.string
+				return OptionFormat.STRING
 			case ETAG:
-				return OptionFormat.opaque
+				return OptionFormat.OPAQUE
 			case IF_NONE_MATCH:
-				return OptionFormat.empty
+				return OptionFormat.EMPTY
 			case URI_PORT:
-				return OptionFormat.uint
+				return OptionFormat.UINT
 			case LOCATION_PATH:
-				return OptionFormat.string
+				return OptionFormat.STRING
 			case URI_PATH:
-				return OptionFormat.string
+				return OptionFormat.STRING
 			case CONTENT_FORMAT:
-				return OptionFormat.uint
+				return OptionFormat.UINT
 			case MAX_AGE:
-				return OptionFormat.uint
+				return OptionFormat.UINT
 			case URI_QUERY:
-				return OptionFormat.string
+				return OptionFormat.STRING
 			case ACCEPT:
-				return OptionFormat.uint
+				return OptionFormat.UINT
 			case LOCATION_QUERY:
-				return OptionFormat.string
-			case BLOCK1:
-				return OptionFormat.uint
-			case BLOCK2:
-				return OptionFormat.uint
+				return OptionFormat.STRING
 			case PROXY_URI:
-				return OptionFormat.string
+				return OptionFormat.STRING
 			case PROXY_SCHEME:
-				return OptionFormat.string
+				return OptionFormat.STRING
 			case SIZE1:
-				return OptionFormat.uint
+				return OptionFormat.UINT
 			case TOKEN:
-				return OptionFormat.opaque
+				return OptionFormat.OPAQUE
 			default:
-				return OptionFormat.unknown
+				return OptionFormat.UNKNOWN
 		}
 	}
 	
-	def static Option getDefaultOption (int optionNumber) {
+	def static Option getDefaultOption(int optionNumber) {
 		switch(optionNumber) {
 			case IF_MATCH:
 				return new Option ("", IF_MATCH)
@@ -390,10 +320,6 @@ class Option {
 				return new Option ("", ACCEPT)
 			case LOCATION_QUERY:
 				return new Option ("", LOCATION_QUERY)
-			case BLOCK1:
-				return new Option ("", BLOCK1)
-			case BLOCK2:
-				return new Option ("", BLOCK2)
 			case PROXY_URI:
 				return new Option ("", PROXY_URI)
 			case PROXY_SCHEME:
@@ -401,7 +327,7 @@ class Option {
 			case SIZE1:
 				return new Option ("", SIZE1)
 			case TOKEN:
-				return new Option (newByteArrayOfSize(0), ETAG)
+				return new Option (newByteArrayOfSize(0), TOKEN)
 			default:
 				return null
 		}

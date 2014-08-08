@@ -1,6 +1,5 @@
 package xtend.coap.message
 
-import java.io.PrintStream
 import java.io.UnsupportedEncodingException
 import java.net.InetAddress
 import java.net.URI
@@ -16,37 +15,58 @@ import xtend.coap.utils.MessageType
 import xtend.coap.utils.Code
 import xtend.coap.utils.DatagramUtils
 import xtend.coap.utils.ContentFormat
+import xtend.coap.utils.HexUtils
+import java.util.Arrays
 
 class Message {
 	
-	val public static VERSION_BITS = 2
-	val public static TYPE_BITS = 2
-	val public static OPTIONCOUNT_BITS = 4
-	val public static CODE_BITS = 8
-	val public static ID_BITS = 16
-	val public static OPTIONDELTA_BITS = 4
-	val public static OPTIONLENGTH_BASE_BITS = 4
-	val public static OPTIONLENGTH_EXTENDED_BITS = 8
-	val public static MAX_ID = (1 << ID_BITS)- 1
-	val public static MAX_OPTIONDELTA = (1 << OPTIONDELTA_BITS) - 1
-	val public static MAX_OPTIONLENGTH_BASE = (1 << OPTIONLENGTH_BASE_BITS) - 2
+	val public static VER = 2
+	val public static T = 2
+	val public static TKL = 4
+	val public static OPTION_COUNT = 4
+	val public static CODE = 8
+	val public static ID = 16
+	val public static OPTION_DELTA = 4
+	val public static OPTION_LENGTH = 4
+	val public static OPTION_EXT_13 = 8
+	val public static OPTION_EXT_14 = 16
+	val public static MAX_ID = 1.operator_doubleLessThan(ID) - 1
+	
+	byte[] payload_marker // = ByteBuffer.allocate(4).putInt(0xFF).array // 0xFF.toString.getBytes
 	
 	URI uri
 	byte[] payload
 	boolean complete
-	int version = 1
+	int version
 	MessageType type
 	int code
-	int messageID = -1
+	int messageID
 	Message buddy
-	Map<Integer, List<Option>> optionMap = new TreeMap<Integer, List<Option>>
+	Map<Integer, List<Option>> optionMap
 	long timestamp
+	int token
+	int token_length
+	
+	def getToken() {
+		return this.token
+	}
+	
+	def void setToken(int token) {
+		this.token = token
+	}
 	
 	// Constructors ////////////////////////////////////////////////////////////
 	/*
 	 * Default constructor for a new CoAP message
 	 */
-	new() { }
+	new() { 
+		this.version = 1
+		this.messageID = -1
+		this.token_length = 2 // Token length in bytes
+		this.optionMap = new TreeMap<Integer, List<Option>>
+		this.payload_marker = newByteArrayOfSize(1)
+		this.payload_marker.set(0, 0xFF.byteValue)
+	}
 
 	/*
 	 * Constructor for a new CoAP message
@@ -55,6 +75,7 @@ class Message {
 	 * @param code The code of the CoAP message (See class CodeRegistry)
 	 */
 	new(MessageType type, int code) {
+		this()
 		this.type = type
 		this.code = code
 	}	
@@ -66,9 +87,8 @@ class Message {
 	 * @param payload The payload of the CoAP message
 	 */
 	new(URI uri, MessageType type, int code, int id, byte[] payload) {
+		this(type, code)
 		this.uri = uri
-		this.type = type
-		this.code = code
 		this.messageID = id
 		this.payload = payload
 	}
@@ -79,17 +99,19 @@ class Message {
 	
 	def newReply(boolean ack) {
 		var reply = new Message
-		if (type == MessageType.Confirmable) {
+		if (type == MessageType.CONFIRMABLE) {
 			if (ack) {
-				reply.type = MessageType.Acknowledgement
+				reply.type = MessageType.ACKNOWLEDGMENT
 			} else {
-				reply.type = MessageType.Reset
+				reply.type = MessageType.RESET
 			}
 		} else {
-			reply.type = MessageType.Non_Confirmable
+			reply.type = MessageType.NON_CONFIRMABLE
 		}
 		reply.messageID = this.messageID
-		reply.setOption(getFirstOption(Option.TOKEN))
+		System.out.println(getToken)
+		reply.setToken(getToken)
+//		reply.setOption(getFirstOption(Option.TOKEN))
 		reply.uri = this.uri
 		reply.code = Code.EMPTY_MESSAGE
 		return reply
@@ -97,7 +119,7 @@ class Message {
 	
 	def static newAcknowledgement(Message msg) {
 		var ack = new Message
-		ack.setType(MessageType.Acknowledgement)
+		ack.setType(MessageType.ACKNOWLEDGMENT)
 		ack.setID(msg.getID)
 		ack.setURI(msg.getURI)
 		ack.setCode(Code.EMPTY_MESSAGE)
@@ -106,7 +128,7 @@ class Message {
 	
 	def static newReset(Message msg) {
 		var rst = new Message
-		rst.setType(MessageType.Reset)
+		rst.setType(MessageType.RESET)
 		rst.setID(msg.getID)
 		rst.setURI(msg.getURI)
 		rst.setCode(Code.EMPTY_MESSAGE)
@@ -144,44 +166,67 @@ class Message {
 		var optionCount = 0
 		var lastOptionNumber = 0
 		for (Option opt : getOptionList) {
+			var optionDeltaExtended = -1
 			var optionDelta = opt.getOptionNumber - lastOptionNumber
-			while (optionDelta > MAX_OPTIONDELTA) {
-				var fencepostNumber = Option.nextJump(lastOptionNumber)
-				var fencepostDelta = fencepostNumber - lastOptionNumber
-				if (fencepostDelta <= 0) {
-					System.err.println("Fencepost liveness violated: delta = " + fencepostDelta)
-				}
-				if (fencepostDelta > MAX_OPTIONDELTA) {
-					System.out.println("Fencepost safety violated: delta = " + fencepostDelta)
-				}
-				optWriter.write(fencepostDelta, OPTIONDELTA_BITS)
-				optWriter.write(0, OPTIONLENGTH_BASE_BITS)
-				optionCount++
-				lastOptionNumber = fencepostNumber
-				optionDelta -= fencepostDelta
+			if (optionDelta >= 0xD && optionDelta < 0x10D) {
+				optionDeltaExtended = optionDelta - 0xD
+				optionDelta = 0xD
+			} else if (optionDelta >= 0x10D && optionDelta <= 0xFFFF) {
+				optionDeltaExtended = optionDelta - 0x10D
+				optionDelta = 0xE
+			} else if (optionDelta > 0xFFFF) {
+				System.err.println("ERROR: Option number error.")
+				return null
 			}
-			optWriter.write(optionDelta, OPTIONDELTA_BITS)
-			var length = opt.getLength
-			if (length <= MAX_OPTIONLENGTH_BASE) {
-				optWriter.write(length, OPTIONLENGTH_BASE_BITS)
-			} else {
-				var baseLength = MAX_OPTIONLENGTH_BASE + 1
-				optWriter.write(baseLength, OPTIONLENGTH_BASE_BITS)
-				var extLength = length - baseLength
-				optWriter.write(extLength, OPTIONLENGTH_EXTENDED_BITS)
+			
+			var optionLengthExtended = -1
+			var optionLength = opt.getLength
+			if (optionLength >= 0xD && optionLength < 0x10D) {
+				optionLengthExtended = optionLength - 0xD
+				optionLength = 0xD
+			} else if (optionLength >= 0x10D && optionLength <= 0xFFFF) {
+				optionLengthExtended = optionLength - 0x10D
+				optionLength = 0xE
+			} else if (optionLength > 0xFFFF) {
+				System.err.println("ERROR: Option length error.")
+				return null
 			}
+			
+			optWriter.write(optionDelta, OPTION_DELTA)
+			optWriter.write(optionLength, OPTION_LENGTH)
+			if (optionDeltaExtended != -1) {
+				if (optionDelta == 0xD) {
+					optWriter.write(optionDeltaExtended, OPTION_EXT_13)
+				} else if (optionDelta == 0xE) {
+					optWriter.write(optionDeltaExtended, OPTION_EXT_14)
+				}
+			}
+			if (optionLengthExtended != -1) {
+				if (optionLength == 0xD) {
+					optWriter.write(optionLengthExtended, OPTION_EXT_13)
+				} else if (optionLength == 0xE) {
+					optWriter.write(optionLengthExtended, OPTION_EXT_14)
+				}
+			}
+			
 			optWriter.writeBytes(opt.getRawValue)
 			optionCount++
 			lastOptionNumber = opt.getOptionNumber
 		}
 		var writer = new DatagramUtils(null)
-		writer.write(version, VERSION_BITS)
-		writer.write(type.ordinal, TYPE_BITS)
-		writer.write(optionCount, OPTIONCOUNT_BITS)
-		writer.write(code, CODE_BITS)
-		writer.write(messageID, ID_BITS)
+		writer.write(version, VER)
+		writer.write(type.ordinal, T)
+		writer.write(token_length, TKL)
+		writer.write(code, CODE)
+		writer.write(messageID, ID)
+		writer.write(token, token_length*8)
 		writer.writeBytes(optWriter.toByteArray)
-		writer.writeBytes(payload)
+		if (payload != null && payload.length > 0) {
+			if (optionCount > 0) {
+				writer.writeBytes(payload_marker)
+			}
+			writer.writeBytes(payload)
+		}
 		return writer.toByteArray
 	}
 
@@ -194,10 +239,11 @@ class Message {
 	 */
 	def static fromByteArray(byte[] byteArray) {
 		var datagram = new DatagramUtils(byteArray)
-		var version = datagram.read(VERSION_BITS)
-		var type = getTypeByID(datagram.read(TYPE_BITS))
-		var optionCount = datagram.read(OPTIONCOUNT_BITS)
-		var code = datagram.read(CODE_BITS)
+		var version = datagram.read(VER)
+		var type = getTypeByID(datagram.read(T))
+		var tok_len = datagram.read(TKL)
+		
+		var code = datagram.read(CODE)
 		if (!Code.isValid(code)) {
 			System.err.println("ERROR: Invalid message code: " + code)
 			return null
@@ -214,27 +260,61 @@ class Message {
 		}
 		msg.version = version
 		msg.type = type
+		msg.token_length = tok_len
 		msg.code = code
-		msg.messageID = datagram.read(ID_BITS)
+		msg.messageID = datagram.read(ID)
+		msg.token = datagram.read(msg.token_length*8)  // Read the token
 		var currentOption = 0
-		for (var i = 0; i < optionCount; i++) {
-			var optionDelta = datagram.read(OPTIONDELTA_BITS)
-			currentOption += optionDelta
-			if (Option.jump(currentOption))
-			{
-				datagram.read(OPTIONLENGTH_BASE_BITS)
-			} else {
-				var length = datagram.read(OPTIONLENGTH_BASE_BITS)
-				if (length > MAX_OPTIONLENGTH_BASE)
-				{
-					var lenAux = datagram.read(OPTIONLENGTH_EXTENDED_BITS)
-					length += lenAux
+		
+		var end = false
+		var bytesLeft = datagram.readBytesLeft
+		var aux = new DatagramUtils(bytesLeft)
+		datagram = new DatagramUtils(bytesLeft)
+		if (aux.read(OPTION_DELTA) == 0x0) {
+			end = true
+		}
+		while (!end){
+			var optionDelta = datagram.read(OPTION_DELTA)
+			var optionLength = datagram.read(OPTION_LENGTH)
+			if (optionDelta == 0xD) {
+				optionDelta = datagram.read(OPTION_EXT_13) + 0xD
+			} else if (optionDelta == 0xE) {
+				optionDelta = datagram.read(OPTION_EXT_14) + 0x10D
+			} else if(optionDelta == 0xF) {  // Reserverd for the payload_marker
+				if(optionDelta != optionLength) {
+					System.err.println("ERROR: Message format error.")
+					return null
 				}
-				var opt = new Option (datagram.readBytes(length), currentOption)
-				msg.addOption(opt)
+			}
+			if (optionLength == 0xD) {
+				optionLength = datagram.read(OPTION_EXT_13) + 0xD
+			} else if (optionDelta == 0xE) {
+				optionLength = datagram.read(OPTION_EXT_14) + 0x10D
+			} else if (optionLength == 0xF) {  // Reserverd for future use
+				System.err.println("ERROR: Message format error.")
+				return null
+			}
+			currentOption += optionDelta
+
+			var rB = datagram.readBytes(optionLength)
+			var opt = new Option (rB, currentOption)
+			msg.addOption(opt)
+
+			
+			bytesLeft = datagram.readBytesLeft
+			aux = new DatagramUtils(bytesLeft)
+			datagram = new DatagramUtils(bytesLeft)
+			if (Arrays.equals(aux.readBytes(msg.payload_marker.length), msg.payload_marker)) {
+				end = true		
+				datagram.readBytes(msg.payload_marker.length)
+				msg.payload = datagram.readBytesLeft
+				if (msg.payload.length == 0) {
+					System.err.println("ERROR: Message format error.")
+					return null
+				}
 			}
 		}
-		msg.payload = datagram.readBytesLeft
+
 		return msg
 	}
 	
@@ -612,15 +692,15 @@ class Message {
 	def static getTypeByID(int id) {
 		switch (id) {
 			case 0:
-				return MessageType.Confirmable
+				return MessageType.CONFIRMABLE
 			case 1:
-				return MessageType.Non_Confirmable
+				return MessageType.NON_CONFIRMABLE
 			case 2:
-				return MessageType.Acknowledgement
+				return MessageType.ACKNOWLEDGMENT
 			case 3:
-				return MessageType.Reset
+				return MessageType.RESET
 			default:
-				return MessageType.Confirmable
+				return MessageType.CONFIRMABLE
 		}
 	}
 	
@@ -643,19 +723,19 @@ class Message {
 	}
 
 	def isConfirmable() {
-		return type == MessageType.Confirmable
+		return type == MessageType.CONFIRMABLE
 	}
 	
 	def isNonConfirmable() {
-		return type == MessageType.Non_Confirmable
+		return type == MessageType.NON_CONFIRMABLE
 	}
 	
 	def isAcknowledgement() {
-		return type == MessageType.Acknowledgement
+		return type == MessageType.ACKNOWLEDGMENT
 	}
 	
 	def isReset() {
-		return type == MessageType.Reset
+		return type == MessageType.RESET
 	}
 	
 	def isReply() {
@@ -680,13 +760,13 @@ class Message {
 		var typeStr = "???"
 		if (type != null) {
 			switch (type) {
-				case Confirmable     : 
+				case CONFIRMABLE     : 
 					typeStr = "CON" 
-				case Non_Confirmable : 
+				case NON_CONFIRMABLE : 
 					typeStr = "NON" 
-				case Acknowledgement : 
+				case ACKNOWLEDGMENT : 
 					typeStr = "ACK" 
-				case Reset           : 
+				case RESET           : 
 					typeStr = "RST" 
 				default              : 
 					typeStr = "???" 
@@ -702,13 +782,13 @@ class Message {
 	def typeString() {
 		if (type != null) {
 			switch (type) {
-				case Confirmable : 
+				case CONFIRMABLE : 
 					return "CON"
-				case Non_Confirmable : 
+				case NON_CONFIRMABLE : 
 					return "NON"
-				case Acknowledgement : 
+				case ACKNOWLEDGMENT : 
 					return "ACK"
-				case Reset : 	
+				case RESET : 	
 					return "RST"
 				default : 
 					return "???"
@@ -717,31 +797,28 @@ class Message {
 		return null
 	}
 	
-	def void log(PrintStream out) {
-		out.println("==[COAP MESSAGE]======================================")
+	def void log() {
+		System.out.println("==[COAP MESSAGE]======================================")
 		var options = getOptionList
 		var uriVal = "NULL"
 		if (uri != null) {
 			uriVal = uri.toString
 		}
-		out.println("URI    : " + uriVal)
-		out.println("ID     : " + messageID)
-		out.println("Type   : " + typeString)
-		out.println("Code   : " + Code.toString(code))
-		out.println("Options: " + options.size)
+		System.out.println("URI    : " + uriVal)
+		System.out.println("ID     : " + messageID)
+		System.out.println("Type   : " + typeString)
+		System.out.println("Code   : " + Code.toString(code))
+		System.out.println("Token  : " + HexUtils.hex(HexUtils.bufferIntValue(getToken).array))
+		System.out.println("Options: " + options.size)
 		for (Option opt : options) {
-			out.println("  * " + opt.getName + ": " + opt.getDisplayValue + " ( " + opt.getLength + " Bytes)")
+			System.out.println("  * " + opt.getName + ": " + opt.getDisplayValue + " (" + opt.getLength + " Bytes)")
 		}
-		out.printf("Payload: " + payloadSize + " Bytes")
-		out.println("------------------------------------------------------")
+		System.out.println("Payload: " + payloadSize + " Bytes")
+		System.out.println("------------------------------------------------------")
 		if (payloadSize > 0) {
-			out.println(getPayloadString)
+			System.out.println(getPayloadString)
 		}
-		out.println("======================================================")
-	}
-	
-	def void log() {
-		log(System.out)
+		System.out.println("======================================================")
 	}
 	
 	def endpointID() {

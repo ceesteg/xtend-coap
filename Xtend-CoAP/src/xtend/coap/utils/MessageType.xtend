@@ -8,8 +8,9 @@ package xtend.coap.utils
 	 * 3: Reset
 	 */
 enum MessageType {
-	Confirmable,
-	Non_Confirmable,
-	Acknowledgement,
-	Reset
+	
+	CONFIRMABLE,
+	NON_CONFIRMABLE,
+	ACKNOWLEDGMENT,
+	RESET
 }

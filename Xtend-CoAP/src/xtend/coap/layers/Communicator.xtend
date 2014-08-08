@@ -12,7 +12,6 @@ class Communicator extends UpperLayer {
 	public final static int DEFAULT_PORT = UDPLayer.DEFAULT_PORT
 	public final static String URI_SCHEME_NAME = UDPLayer.URI_SCHEME_NAME
 	
-	protected TransferLayer transferLayer
 	protected TransactionLayer transactionLayer
 	protected MessageLayer messageLayer
 	protected UDPLayer udpLayer
@@ -25,7 +24,6 @@ class Communicator extends UpperLayer {
 	 * @param port The local UDP port to listen for incoming messages
 	 */	
 	new(int port, boolean daemon) throws SocketException {
-		transferLayer = new TransferLayer
 		transactionLayer = new TransactionLayer
 		messageLayer = new MessageLayer
 		udpLayer = new UDPLayer(port, daemon)

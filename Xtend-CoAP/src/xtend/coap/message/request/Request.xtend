@@ -13,14 +13,12 @@ import xtend.coap.message.MessageHandler
 import xtend.coap.message.response.ResponseHandler
 import xtend.coap.layers.Communicator
 import xtend.coap.utils.MessageType
-import xtend.coap.utils.Option
 import xtend.coap.utils.Code
 
 class Request extends Message {
 	
 	static Communicator DEFAULT_COMM
 	val static TIMEOUT_RESPONSE = new Response
-	val static startTime = System.currentTimeMillis
 	
 	Communicator communicator
 	List<ResponseHandler> responseHandlers
@@ -35,9 +33,9 @@ class Request extends Message {
 	 */	
 	new(int code, boolean confirmable) {
 		if(confirmable){
-			this.type = MessageType.Confirmable
+			this.type = MessageType.CONFIRMABLE
 		} else{
-			this.type = MessageType.Non_Confirmable
+			this.type = MessageType.NON_CONFIRMABLE
 		}
 		this.code = code
 	}
@@ -66,23 +64,29 @@ class Request extends Message {
 	def void respond(Response response) {
 		response.setRequest(this)
 		response.setURI(getURI)
-		response.setOption(getFirstOption(Option.TOKEN))
+		response.setToken(getToken)
+
+//		response.setOption(getFirstOption(Option.TOKEN))
 		if (responseCount == 0 && isConfirmable) {
 			response.setID(getID)
 		}
 		if (response.getType == null) {
 			if (responseCount == 0 && isConfirmable) {
-				response.setType(MessageType.Acknowledgement)
+				response.setType(MessageType.ACKNOWLEDGMENT)
 			} else {
 				response.setType(getType)
 			}
 		}		
 		
-		if (communicator != null) try {
-			communicator.sendMessage(response)
-		} catch (IOException e) {
-			e.printStackTrace
-		} else {
+		if (communicator != null) {
+			try {
+				communicator.sendMessage(response)
+			} catch (IOException e) {
+				e.printStackTrace
+			} 
+		}
+		else {
+			System.out.println(response.getToken)
 			response.handle
 		}
 		responseCount++
@@ -103,7 +107,7 @@ class Request extends Message {
 	def void accept() {
 		if (isConfirmable) {
 			var ack = new Response(Code.EMPTY_MESSAGE)
-			ack.setType(MessageType.Acknowledgement)
+			ack.setType(MessageType.ACKNOWLEDGMENT)
 			respond(ack)
 		}
 	}
@@ -111,7 +115,7 @@ class Request extends Message {
 	def void reject() {
 		if (isConfirmable) {
 			var rst = new Response(Code.EMPTY_MESSAGE)
-			rst.setType(MessageType.Reset)
+			rst.setType(MessageType.RESET)
 			respond(rst)
 		}
 	}
