@@ -25,6 +25,8 @@ class Message {
 	val public static TKL = 4
 	val public static OPTION_COUNT = 4
 	val public static CODE = 8
+	val public static CODE_CLASS = 3
+	val public static CODE_DETAIL = 5
 	val public static ID = 16
 	val public static OPTION_DELTA = 4
 	val public static OPTION_LENGTH = 4
@@ -32,27 +34,36 @@ class Message {
 	val public static OPTION_EXT_14 = 16
 	val public static MAX_ID = 1.operator_doubleLessThan(ID) - 1
 	
-	byte[] payload_marker // = ByteBuffer.allocate(4).putInt(0xFF).array // 0xFF.toString.getBytes
+	byte[] payload_marker 
 	
 	URI uri
 	byte[] payload
 	boolean complete
 	int version
 	MessageType type
-	int code
+	String code
 	int messageID
 	Message buddy
 	Map<Integer, List<Option>> optionMap
 	long timestamp
 	int token
-	int token_length
+	int tokenLength
 	
 	def getToken() {
 		return this.token
 	}
 	
-	def void setToken(int token) {
+	def void setToken(int token, int tokenLength) {
 		this.token = token
+		setTokenLength(tokenLength)
+	}
+	
+	def int getTokenLength() {
+		return this.tokenLength
+	}
+	
+	def void setTokenLength(int tokenLength) {
+		this.tokenLength = tokenLength
 	}
 	
 	// Constructors ////////////////////////////////////////////////////////////
@@ -62,7 +73,6 @@ class Message {
 	new() { 
 		this.version = 1
 		this.messageID = -1
-		this.token_length = 2 // Token length in bytes
 		this.optionMap = new TreeMap<Integer, List<Option>>
 		this.payload_marker = newByteArrayOfSize(1)
 		this.payload_marker.set(0, 0xFF.byteValue)
@@ -74,7 +84,7 @@ class Message {
 	 * @param type The type of the CoAP message
 	 * @param code The code of the CoAP message (See class CodeRegistry)
 	 */
-	new(MessageType type, int code) {
+	new(MessageType type, String code) {
 		this()
 		this.type = type
 		this.code = code
@@ -86,7 +96,7 @@ class Message {
 	 * @param uri The URI of the CoAP message
 	 * @param payload The payload of the CoAP message
 	 */
-	new(URI uri, MessageType type, int code, int id, byte[] payload) {
+	new(URI uri, MessageType type, String code, int id, byte[] payload) {
 		this(type, code)
 		this.uri = uri
 		this.messageID = id
@@ -109,9 +119,7 @@ class Message {
 			reply.type = MessageType.NON_CONFIRMABLE
 		}
 		reply.messageID = this.messageID
-		System.out.println(getToken)
-		reply.setToken(getToken)
-//		reply.setOption(getFirstOption(Option.TOKEN))
+		reply.setToken(getToken, getTokenLength)
 		reply.uri = this.uri
 		reply.code = Code.EMPTY_MESSAGE
 		return reply
@@ -122,6 +130,7 @@ class Message {
 		ack.setType(MessageType.ACKNOWLEDGMENT)
 		ack.setID(msg.getID)
 		ack.setURI(msg.getURI)
+		ack.setTokenLength(0)
 		ack.setCode(Code.EMPTY_MESSAGE)
 		return ack
 	}
@@ -131,6 +140,7 @@ class Message {
 		rst.setType(MessageType.RESET)
 		rst.setID(msg.getID)
 		rst.setURI(msg.getURI)
+		rst.setTokenLength(0)
 		rst.setCode(Code.EMPTY_MESSAGE)
 		return rst
 	}
@@ -216,10 +226,14 @@ class Message {
 		var writer = new DatagramUtils(null)
 		writer.write(version, VER)
 		writer.write(type.ordinal, T)
-		writer.write(token_length, TKL)
-		writer.write(code, CODE)
+		writer.write(tokenLength, TKL)
+		writer.write(Code.codeClass(code), CODE_CLASS)
+		writer.write(Code.codeDetail(code), CODE_DETAIL)
 		writer.write(messageID, ID)
-		writer.write(token, token_length*8)
+		if (code == Code.EMPTY_MESSAGE) {
+			return writer.toByteArray
+		}
+		writer.write(token, tokenLength*8)
 		writer.writeBytes(optWriter.toByteArray)
 		if (payload != null && payload.length > 0) {
 			if (optionCount > 0) {
@@ -241,9 +255,10 @@ class Message {
 		var datagram = new DatagramUtils(byteArray)
 		var version = datagram.read(VER)
 		var type = getTypeByID(datagram.read(T))
-		var tok_len = datagram.read(TKL)
-		
-		var code = datagram.read(CODE)
+		var tokLen = datagram.read(TKL)
+		var codeClass = datagram.read(CODE_CLASS)
+		var codeDetail = datagram.read(CODE_DETAIL)
+		var code = Code.genCode(codeClass, codeDetail)
 		if (!Code.isValid(code)) {
 			System.err.println("ERROR: Invalid message code: " + code)
 			return null
@@ -260,10 +275,17 @@ class Message {
 		}
 		msg.version = version
 		msg.type = type
-		msg.token_length = tok_len
+		msg.tokenLength = tokLen
 		msg.code = code
 		msg.messageID = datagram.read(ID)
-		msg.token = datagram.read(msg.token_length*8)  // Read the token
+		msg.token = datagram.read(msg.tokenLength * 0x8)  // Read the token
+		
+		if (code == Code.EMPTY_MESSAGE) {
+			if (msg.token != 0x0) {
+				System.err.println("ERROR: Message format error.")
+				return null
+			}
+		}
 		var currentOption = 0
 		
 		var end = false
@@ -275,6 +297,9 @@ class Message {
 		}
 		while (!end){
 			var optionDelta = datagram.read(OPTION_DELTA)
+			if (optionDelta == 0x0) {
+				end = true
+			}
 			var optionLength = datagram.read(OPTION_LENGTH)
 			if (optionDelta == 0xD) {
 				optionDelta = datagram.read(OPTION_EXT_13) + 0xD
@@ -396,7 +421,7 @@ class Message {
 	 * @param code The message code to which the current message code should
 	 *             be set to
 	 */
-	def void setCode(int code) {
+	def void setCode(String code) {
 		this.code = code
 	}
 	

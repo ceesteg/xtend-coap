@@ -11,17 +11,22 @@ import xtend.coap.message.Message
 
 class MessageLayer extends UpperLayer { 
 	
-	val static RESPONSE_TIMEOUT = 2000
-	val static RESPONSE_RANDOM_FACTOR = 1.5
+	val static ACK_TIMEOUT = 2000
+	val static ACK_RANDOM_FACTOR = 1.5
 	val static MAX_RETRANSMIT = 4
 	val static MESSAGE_CACHE_SIZE = 100 
 	
-	Timer timer = new Timer(true) 
-	Map<Integer, TxContext> txTable = new HashMap<Integer, TxContext>
-	MessageCache dupCache = new MessageCache
-	MessageCache replyCache = new MessageCache
-	int messageID
- 
+	Timer timer
+	Map<Integer, TxContext> txTable
+	MessageCache dupCache
+	MessageCache replyCache
+	
+ 	new () {
+ 		timer = new Timer(true) 
+		txTable = new HashMap<Integer, TxContext>
+		dupCache = new MessageCache
+		replyCache = new MessageCache
+ 	}
 	private static class TxContext { 
 		Message msg
 		RetransmitTask retransmitTask
@@ -59,15 +64,8 @@ class MessageLayer extends UpperLayer {
 		}
 	}
 	
-	new() {
-		this.messageID = 0x1D00
-	}
-	
 	@Override
 	override protected void doSendMessage(Message msg) throws IOException {
-		if (msg.getID < 0) {
-			msg.setID(nextMessageID)
-		}
 		if (msg.isConfirmable) {
 			var ctx = addTransmission(msg)
 			scheduleRetransmission(ctx)
@@ -164,14 +162,7 @@ class MessageLayer extends UpperLayer {
 	 * 
 	 * @return The message ID
 	 */
-	def private int nextMessageID() {
-		var ID = messageID
-		messageID++
-		if (messageID > Message.MAX_ID) {
-			messageID = 1
-		}
-		return ID
-	}
+	
 	
 	/*
 	 * Calculates the initial timeout for outgoing Confirmable messages.
@@ -179,7 +170,7 @@ class MessageLayer extends UpperLayer {
 	 * @Return The timeout in milliseconds
 	 */
 	def private static int initialTimeout() {
-		return rnd(RESPONSE_TIMEOUT, (RESPONSE_TIMEOUT * RESPONSE_RANDOM_FACTOR).intValue)
+		return rnd(ACK_TIMEOUT, (ACK_TIMEOUT * ACK_RANDOM_FACTOR).intValue)
 	} 
 	
 	/*

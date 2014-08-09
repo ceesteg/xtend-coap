@@ -13,7 +13,7 @@ class Response extends Message {
 		this(Code.RESP_VALID)
 	}
 	
-	new(int code) {
+	new(String code) {
 		setCode(code)
 	}
 	

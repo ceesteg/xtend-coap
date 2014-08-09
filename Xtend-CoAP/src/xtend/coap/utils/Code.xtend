@@ -9,48 +9,71 @@ import xtend.coap.message.request.DeleteRequest
 import xtend.coap.message.response.Response
 
 class Code {
-	public static final int EMPTY_MESSAGE = 0
+	public static final String EMPTY_MESSAGE = "0.00"
 	
-	public static final int METHOD_GET = 1
-	public static final int METHOD_POST = 2
-	public static final int METHOD_PUT = 3
-	public static final int METHOD_DELETE = 4
+	public static final String METHOD_GET = "0.01"
+	public static final String METHOD_POST = "0.02"
+	public static final String METHOD_PUT = "0.03"
+	public static final String METHOD_DELETE = "0.04"
 	
-	public static final int RESP_CREATED                          = 201
-	public static final int RESP_DELETED                          = 202
-	public static final int RESP_VALID                            = 203
-	public static final int RESP_CHANGED                          = 204
-	public static final int RESP_CONTENT                          = 205
-	public static final int RESP_BAD_REQUEST                      = 400
-	public static final int RESP_UNAUTHORIZED                     = 401
-	public static final int RESP_BAD_OPTION                       = 402
-	public static final int RESP_FORBIDDEN                        = 403
-	public static final int RESP_NOT_FOUND                        = 404
-	public static final int RESP_METHOD_NOT_ALLOWED               = 405
-	public static final int RESP_NOT_ACCEPTABLE                   = 406
-	public static final int RESP_PRECONDITION_FAILED              = 412
-	public static final int RESP_REQUEST_ENTITY_TOO_LARGE         = 413
-	public static final int RESP_UNSUPPORTED_CONTENT_TYPE         = 415
-	public static final int RESP_INTERNAL_SERVER_ERROR            = 500
-	public static final int RESP_NOT_IMPLEMENTED                  = 501
-	public static final int RESP_BAD_GATEWAY                      = 502
-	public static final int RESP_SERVICE_UNAVAILABLE              = 503
-	public static final int RESP_GATEWAY_TIMEOUT                  = 504
-	public static final int RESP_PROXYING_NOT_SUPPORTED           = 505
+	public static final String RESP_CREATED                          = "2.01"
+	public static final String RESP_DELETED                          = "2.02"
+	public static final String RESP_VALID                            = "2.03"
+	public static final String RESP_CHANGED                          = "2.04"
+	public static final String RESP_CONTENT                          = "2.05"
+	public static final String RESP_BAD_REQUEST                      = "4.00"
+	public static final String RESP_UNAUTHORIZED                     = "4.01"
+	public static final String RESP_BAD_OPTION                       = "4.02"
+	public static final String RESP_FORBIDDEN                        = "4.03"
+	public static final String RESP_NOT_FOUND                        = "4.04"
+	public static final String RESP_METHOD_NOT_ALLOWED               = "4.05"
+	public static final String RESP_NOT_ACCEPTABLE                   = "4.06"
+	public static final String RESP_PRECONDITION_FAILED              = "4.12"
+	public static final String RESP_REQUEST_ENTITY_TOO_LARGE         = "4.13"
+	public static final String RESP_UNSUPPORTED_CONTENT_TYPE         = "4.15"
+	public static final String RESP_INTERNAL_SERVER_ERROR            = "5.00"
+	public static final String RESP_NOT_IMPLEMENTED                  = "5.01"
+	public static final String RESP_BAD_GATEWAY                      = "5.02"
+	public static final String RESP_SERVICE_UNAVAILABLE              = "5.03"
+	public static final String RESP_GATEWAY_TIMEOUT                  = "5.04"
+	public static final String RESP_PROXYING_NOT_SUPPORTED           = "5.05"
 	
-	def static isRequest(int code) {
-		return (code >= 1) && (code <= 31)
+	def static int codeClass(String code) {
+		var codeD = Double.parseDouble(code)
+		return Math.floor(codeD).intValue
+	}
+	
+	def static int codeDetail(String code) {
+		return Integer.valueOf(String.valueOf(code).split("\\.").get(1))
+	}
+	
+	def static String genCode(int codeClass, int codeDetail){
+		var ret = codeClass + "."
+		if (codeDetail < 10) {
+			ret += "0"
+		}
+		return ret + codeDetail
+	}
+	
+	def static isRequest(String code) {
+		var codeClass = codeClass(code)
+		var codeDetail = codeDetail(code)
+		return (codeClass == 0) && (codeDetail >= 1) && (codeDetail <= 31)
 	}
 
-	def static isResponse(int code) {
-		return (code >= 200) && (code <= 531)
+	def static isResponse(String code) {
+		var codeClass = codeClass(code)
+		var codeDetail = codeDetail(code)
+		return (codeClass >= 2) && (codeClass <=5) && (codeDetail >= 0) && (codeDetail <= 31)
 	}
 
-	def static isValid(int code) {
-		return ((code >= 0) && (code <= 31)) || ((code >= 100) && (code <= 131)) || ((code >= 200) && (code <= 531)) || ((code >= 600) && (code <= 731))
+	def static isValid(String code) {
+		var codeClass = codeClass(code)
+		var codeDetail = codeDetail(code)
+		return (codeClass >= 0) && (codeClass <= 7) && (codeDetail >= 0) && (codeDetail <= 31)
 	}
 
-	def static Class<? extends Message> getMessageClass(int code) {
+	def static Class<? extends Message> getMessageClass(String code) {
 		if (code == EMPTY_MESSAGE) {
 			return typeof(Response)
 		} else if (isRequest(code)) {
@@ -75,7 +98,7 @@ class Code {
 		}
 	}
 	
-	def static toString(int code) {
+	def static toString(String code) {
 		switch (code) {
 			case EMPTY_MESSAGE:
 				return "Empty Message"

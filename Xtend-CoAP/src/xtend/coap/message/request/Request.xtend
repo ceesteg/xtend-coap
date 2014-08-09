@@ -31,7 +31,7 @@ class Request extends Message {
 	 * @param code The method code of the message
 	 * @param confirmable True if the request is to be sent as a Confirmable
 	 */	
-	new(int code, boolean confirmable) {
+	new(String code, boolean confirmable) {
 		if(confirmable){
 			this.type = MessageType.CONFIRMABLE
 		} else{
@@ -64,9 +64,7 @@ class Request extends Message {
 	def void respond(Response response) {
 		response.setRequest(this)
 		response.setURI(getURI)
-		response.setToken(getToken)
-
-//		response.setOption(getFirstOption(Option.TOKEN))
+		response.setToken(getToken, getTokenLength)
 		if (responseCount == 0 && isConfirmable) {
 			response.setID(getID)
 		}
@@ -84,15 +82,13 @@ class Request extends Message {
 			} catch (IOException e) {
 				e.printStackTrace
 			} 
-		}
-		else {
-			System.out.println(response.getToken)
+		} else {
 			response.handle
 		}
 		responseCount++
 	}
 	
-	def void respond(int code, String message) {
+	def void respond(String code, String message) {
 		var response = new Response(code)
 		if (message != null) {
 			response.setPayload(message)
@@ -100,7 +96,7 @@ class Request extends Message {
 		respond(response)
 	}
 
-	def void respond(int code) {
+	def void respond(String code) {
 		respond(code, null)
 	}
 	

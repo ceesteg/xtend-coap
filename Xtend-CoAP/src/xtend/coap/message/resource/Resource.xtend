@@ -41,8 +41,8 @@ class Resource implements RequestHandler {
 	
 	new(String resourceIdentifier, boolean hidden) {
 		this.resourceIdentifier = resourceIdentifier
-		this.resourceName = new String
-		this.interfaceDescription = new String
+		this.resourceName = ""
+		this.interfaceDescription = ""
 		this.contentTypeCode = -1
 		this.maximumSizeEstimate = -1
 		this.observable = false

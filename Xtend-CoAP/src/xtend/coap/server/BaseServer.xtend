@@ -142,8 +142,9 @@ class BaseServer implements MessageReceiver, MessageHandler {
 		
 		var uriPaths = request.getOptions(Option.URI_PATH)
 		
-		if (uriPaths == null) return ""
-		
+		if (uriPaths == null) {
+			return ""
+		}
 		var builder = new StringBuilder
 
 		for (var i=0; i<uriPaths.length; i++) {
