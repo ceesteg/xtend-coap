@@ -16,7 +16,7 @@ class DiscoveryResource extends ReadOnlyResource {
 	 * 
 	 * @param resources The resources used for the discovery
 	 */
-	new(Resource root) {
+	new (Resource root) {
 		super(DEFAULT_IDENTIFIER)
 		this.root = root
 		setContentTypeCode(ContentFormat.LINK_FORMAT)

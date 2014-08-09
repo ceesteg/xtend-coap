@@ -15,10 +15,10 @@ class LocalResource extends Resource {
 	
 	// Constructors ////////////////////////////////////////////////////////////
 	
-	new(String resourceIdentifier, boolean hidden) {
+	new (String resourceIdentifier, boolean hidden) {
 		super(resourceIdentifier, hidden)
 	}
-	new(String resourceIdentifier) {
+	new (String resourceIdentifier) {
 		super(resourceIdentifier, false)
 	}
 

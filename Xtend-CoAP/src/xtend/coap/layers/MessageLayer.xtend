@@ -113,7 +113,7 @@ class MessageLayer extends UpperLayer {
 	def handleResponseTimeout(TxContext ctx) {
 		if (ctx.numRetransmit < MAX_RETRANSMIT) {
 			ctx.numRetransmit++
-			System.out.printf("[" + getClass.getName + "] Retransmitting " + ctx.msg.key + " (" + ctx.numRetransmit + " of " + MAX_RETRANSMIT + ")")
+			System.out.println("[" + getClass.getName + "] Retransmitting " + ctx.msg.key + " (" + ctx.numRetransmit + " of " + MAX_RETRANSMIT + ")")
 			try {
 				sendMessageOverLowerLayer(ctx.msg)
 			} catch (IOException e) {

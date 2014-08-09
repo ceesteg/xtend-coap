@@ -50,7 +50,7 @@ class TransactionLayer extends UpperLayer {
 				response.setRequest(request)
 			}
 		} else if (msg instanceof Request) {
-			if (token != 0x0000) {
+			if (token != 0x0) {
 				tokenMap.put(token, msg as Request)
 			}
 		}
