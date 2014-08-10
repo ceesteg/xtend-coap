@@ -7,10 +7,6 @@ import java.net.URI
 import xtend.coap.message.response.Response
 import xtend.coap.message.resource.Resource
 import xtend.coap.message.request.Request
-import xtend.coap.message.request.GetRequest
-import xtend.coap.message.request.PostRequest
-import xtend.coap.message.request.PutRequest
-import xtend.coap.message.request.DeleteRequest
 import xtend.coap.utils.ContentFormat
 import xtend.coap.endpoint.Endpoint
 import xtend.coap.utils.MessageType
@@ -104,7 +100,7 @@ class SampleClient extends Endpoint {
 			System.err.println("Method not specified")
 			return
 		}
-		var request = newRequest(method)
+		var request = Request.newRequest(method)
 		if (request == null) {
 			System.err.println("Unknown method: " + method)
 			return
@@ -190,28 +186,5 @@ class SampleClient extends Endpoint {
 		System.out.println("Examples:")
 		System.out.println("  SampleClient DISCOVER coap://localhost")
 		System.out.println("  SampleClient POST coap://someServer.org:61616 my data")
-	}
-
-	/*
-	 * Instantiates a new request based on a string describing a method.
-	 * 
-	 * @return A new request object, or null if method not recognized
-	 */
-	def private static Request newRequest(String method) {
-		if (method.equals("GET")) {
-			return new GetRequest
-		} else if (method.equals("POST")) {
-			return new PostRequest
-		} else if (method.equals("PUT")) {
-			return new PutRequest
-		} else if (method.equals("DELETE")) {
-			return new DeleteRequest
-		} else if (method.equals("DISCOVER")){
-			return new GetRequest
-		} else if (method.equals("OBSERVE")){
-			return new GetRequest
-		} else {
-			return null
-		}
 	}
 }

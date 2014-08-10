@@ -261,4 +261,27 @@ class Request extends Message {
 		}
 		return DEFAULT_COMM
 	}
+	
+		/*
+	 * Instantiates a new request based on a string describing a method.
+	 * 
+	 * @return A new request object, or null if method not recognized
+	 */
+	def static Request newRequest(String method) {
+		if (method.equals("GET")) {
+			return new GetRequest
+		} else if (method.equals("POST")) {
+			return new PostRequest
+		} else if (method.equals("PUT")) {
+			return new PutRequest
+		} else if (method.equals("DELETE")) {
+			return new DeleteRequest
+		} else if (method.equals("DISCOVER")){
+			return new GetRequest
+		} else if (method.equals("OBSERVE")){
+			return new GetRequest
+		} else {
+			return null
+		}
+	}
 }
