@@ -31,10 +31,10 @@ class SampleClient extends Endpoint {
 //		var loop   = false
 		
 		// parametros de prueba 1
-//		var String method  = "DISCOVER"
-//		var String uri     = "coap://localhost"
-//		var String payload = null
-//		var loop   = false
+		var String method  = "DISCOVER"
+		var String uri     = "coap://localhost"
+		var String payload = null
+		var loop   = false
 		// parametros de prueba 2
 //		var method  = "P"
 //		var uri     = "coap://localhost"
@@ -56,10 +56,10 @@ class SampleClient extends Endpoint {
 //		var String payload = null
 //		var loop   = false
         // parametros de prueba 6
-		var String method  = "GET"
-		var String uri     = "coap://localhost/separate"
-		var String payload = null
-		var loop   = false
+//		var String method  = "GET"
+//		var String uri     = "coap://localhost/separate"
+//		var String payload = null
+//		var loop   = false
 
 		if (args.length == 0) {
 			printInfo

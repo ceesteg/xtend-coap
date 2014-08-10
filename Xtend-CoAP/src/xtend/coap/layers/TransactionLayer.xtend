@@ -10,10 +10,10 @@ import xtend.coap.message.request.Request
 
 class TransactionLayer extends UpperLayer {
 	
-	Map<Integer, Request> tokenMap
+	Map<Long, Request> tokenMap
 	
 	new (){
-		tokenMap = new HashMap<Integer, Request>
+		tokenMap = new HashMap<Long, Request>
 	}
 
 	@Override

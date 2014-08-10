@@ -46,14 +46,14 @@ class Message {
 	Message buddy
 	Map<Integer, List<Option>> optionMap
 	long timestamp
-	int token
+	long token
 	int tokenLength
 	
 	def getToken() {
 		return this.token
 	}
 	
-	def void setToken(int token, int tokenLength) {
+	def void setToken(long token, int tokenLength) {
 		this.token = token
 		setTokenLength(tokenLength)
 	}
@@ -130,7 +130,6 @@ class Message {
 		ack.setType(MessageType.ACKNOWLEDGMENT)
 		ack.setID(msg.getID)
 		ack.setURI(msg.getURI)
-		ack.setTokenLength(0)
 		ack.setCode(Code.EMPTY_MESSAGE)
 		return ack
 	}
@@ -140,7 +139,6 @@ class Message {
 		rst.setType(MessageType.RESET)
 		rst.setID(msg.getID)
 		rst.setURI(msg.getURI)
-		rst.setTokenLength(0)
 		rst.setCode(Code.EMPTY_MESSAGE)
 		return rst
 	}
@@ -233,7 +231,7 @@ class Message {
 		if (code == Code.EMPTY_MESSAGE) {
 			return writer.toByteArray
 		}
-		writer.write(token, tokenLength*8)
+		writer.writeBytes(HexUtils.longToBytes(token, tokenLength))
 		writer.writeBytes(optWriter.toByteArray)
 		if (payload != null && payload.length > 0) {
 			if (optionCount > 0) {
@@ -278,7 +276,7 @@ class Message {
 		msg.tokenLength = tokLen
 		msg.code = code
 		msg.messageID = datagram.read(ID)
-		msg.token = datagram.read(msg.tokenLength * 0x8)  // Read the token
+		msg.token = HexUtils.bytesToLong(datagram.readBytes(msg.tokenLength))  // Read the token
 		
 		if (code == Code.EMPTY_MESSAGE) {
 			if (msg.token != 0x0) {
@@ -833,7 +831,7 @@ class Message {
 		System.out.println("ID     : " + messageID)
 		System.out.println("Type   : " + typeString)
 		System.out.println("Code   : " + Code.toString(code))
-		System.out.println("Token  : " + HexUtils.hex(HexUtils.bufferIntValue(getToken).array))
+		System.out.println("Token  : " + HexUtils.hex(HexUtils.longToBytes(getToken, getTokenLength)))
 		System.out.println("Options: " + options.size)
 		for (Option opt : options) {
 			System.out.println("  * " + opt.getName + ": " + opt.getDisplayValue + " (" + opt.getLength + " Bytes)")

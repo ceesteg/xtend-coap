@@ -43,7 +43,8 @@ class Option {
 	}
 	
 	def private void setIntValue(int valueAux) {
-		value = HexUtils.bufferIntValue(valueAux)
+		var aux = HexUtils.intToBytes(valueAux, 4)
+		value = ByteBuffer.allocate(4).put(aux, 0, aux.length)
 	}
 	
 	/*
@@ -160,7 +161,7 @@ class Option {
 	 * @return The integer representation of the current option's data
 	 */
 	def getIntValue () {
-		return HexUtils.getIntValue(value)
+		return HexUtils.bytesToInt(value.array)
 	}
 	
 	/*

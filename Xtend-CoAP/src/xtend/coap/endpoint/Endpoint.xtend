@@ -31,14 +31,31 @@ class Endpoint {
 		}
 	}
 	
+//	def static void generateTokenForRequest(Request request) {
+//		var random = new Random
+//		var length = 4
+//		var int token = 0
+//		for (var i = 0; i < length * 8; i++) {
+//			var rndDigit = random.nextInt(2)
+//			token = token + rndDigit * Math.pow(2, i).intValue
+//		}
+//		request.setToken(token, length)
+//	}
+	
+	def static long generateToken(int length) {
+		var random = new Random
+		var long token = 0
+		for (var i = 0; i < length * 8; i++) {
+			var rndDigit =  random.nextInt(2)
+			token += rndDigit * Math.pow(2, i).longValue
+		}
+		return token
+	}
+	
 	def static void generateTokenForRequest(Request request) {
 		var random = new Random
-		var length = 4
-		var int token = 0
-		for (var i = 0; i < length * 8; i++) {
-			var rndDigit = random.nextInt(2)
-			token = token + rndDigit * Math.pow(2, i).intValue
-		}
+		var length = random.nextInt(3) + 5
+		var token = generateToken(length)
 		request.setToken(token, length)
 	}
 }
