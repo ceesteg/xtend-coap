@@ -2,17 +2,17 @@ package com.xtend.example
 
 import java.net.URISyntaxException
 import java.io.IOException
-import java.net.URI
 
 import com.xtend.coap.message.response.Response
 import com.xtend.coap.message.resource.Resource
 import com.xtend.coap.message.request.Request
 import com.xtend.coap.utils.ContentFormat
-import com.xtend.coap.endpoint.Endpoint
 import com.xtend.coap.utils.MessageType
 import com.xtend.coap.layers.Communicator
+import com.xtend.coap.utils.Option
+import com.xtend.coap.message.MessageSender
 
-class SampleClient extends Endpoint {
+class SampleClient extends MessageSender {
 	
 	val static DISCOVERY_RESOURCE = "/.well-known/core"
 	val static IDX_METHOD  = 0
@@ -31,17 +31,17 @@ class SampleClient extends Endpoint {
 //		var loop   = false
 		
 		// parametros de prueba 1
-		var String method  = "DISCOVER"
-		var String uri     = "coap://localhost"
-		var String payload = null
-		var loop   = false
+//		var String method  = "OBSERVE"
+//		var String uri     = "coap://localhost"
+//		var String payload = null
+//		var loop   = false
 		// parametros de prueba 2
-//		var method  = "P"
-//		var uri     = "coap://localhost"
-//		var payload = "my data"
+//		var method  = "GET"
+//		var uri     = "coap://localhost/sayHello"
+//		var payload = "César" // ""
 //		var loop   = false
 		// parametros de prueba 3
-//		var String method  = "POST"
+//		var String method  = "GET"
 //		var String uri     = "coap://localhost/toUpper"
 //		var String payload = "ponlo en mayusculas"
 //		var loop   = false
@@ -58,6 +58,21 @@ class SampleClient extends Endpoint {
         // parametros de prueba 6
 //		var String method  = "GET"
 //		var String uri     = "coap://localhost/separate"
+//		var String payload = null
+//		var loop   = false
+		// parametros de prueba 7
+//		var String method  = "DISCOVER"
+//		var String uri     = "coap://localhost"
+//		var String payload = null
+//		var loop   = false
+		// parametros de prueba 8
+		var String method  = "GET"
+		var String uri     = "coap://localhost/level1"
+		var String payload = null
+		var loop   = false
+		// parametros de prueba 8
+//		var String method  = "GET"
+//		var String uri     = "coap://localhost/level1/level2"
 //		var String payload = null
 //		var loop   = false
 
@@ -105,6 +120,11 @@ class SampleClient extends Endpoint {
 			System.err.println("Unknown method: " + method)
 			return
 		}
+		
+		if (method.equals("OBSERVE")) {
+			request.setOption(new Option(60, Option.OBSERVE))
+		}
+		
 		if (uri == null) {
 			System.err.println("URI not specified")
 		}
@@ -112,7 +132,7 @@ class SampleClient extends Endpoint {
 			uri = uri + DISCOVERY_RESOURCE
 		}
 		try {
-			request.setURI(new URI(uri))
+			request.setURI(uri)
 		} catch (URISyntaxException e) {
 			System.err.println("Failed to parse URI: " + e.getMessage)
 			return

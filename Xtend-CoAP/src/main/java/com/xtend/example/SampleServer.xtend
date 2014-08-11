@@ -21,10 +21,13 @@ class SampleServer extends BaseServer {
 	 * 
 	 */
 	new() throws SocketException {
-		addResource(new HelloWorldResource)
+		addResource(new sayHelloResource)
 		addResource(new StorageResource)
 		addResource(new ToUpperResource)
 		addResource(new SeparateResource)
+		var level1 = new Level1
+		level1.addSubResource(new Level2)
+		addResource(level1)
 	}
 
 	// Resource definitions ////////////////////////////////////////////////////
@@ -33,19 +36,25 @@ class SampleServer extends BaseServer {
 	 * Defines a resource that returns "Hello World!" on a GET request.
 	 * 
 	 */
-	private static class HelloWorldResource extends ReadOnlyResource {
+	private static class sayHelloResource extends ReadOnlyResource {
 		
 		new() {
-			super("helloWorld")
+			super("sayHello")
 			setResourceName("GET a friendly greeting!")
 		}
 		
 		@Override
 		override void performGet(GetRequest request) {
 			var response = new Response(Code.RESP_CONTENT)
-			response.setPayload("Hello World! Some sauts: äöü")
+			var name = request.getPayloadString
+			if (name == null || name.trim.equals("")) {
+				response.setPayload("Hello unknown person!!")
+			} else {
+				response.setPayload("Hello " + name + "!!")
+			}
 			request.respond(response)
 		}
+		
 	}
 	
 	private static class ToUpperResource extends LocalResource {
@@ -53,6 +62,12 @@ class SampleServer extends BaseServer {
 		new() {
 			super("toUpper")
 			setResourceName("POST text here to convert it to uppercase")
+		}
+		
+		@Override
+		override void performGet(GetRequest request) {
+			var text = request.getPayloadString
+			request.respond(Code.RESP_CONTENT, text.toUpperCase)
 		}
 		
 		@Override
@@ -150,9 +165,45 @@ class SampleServer extends BaseServer {
 			}
 			var response = new Response(Code.RESP_CONTENT)
 			response.setID(nextMessageID("S"))
-//			generateTokenForRequest(response)
-			response.setPayload("This message was sent by a separate response.\n" +
-				"Your client will need to acknowledge it, otherwise it will be retransmitted.")
+			response.setPayload("This message was sent by a separate response.\nYour client will need to acknowledge it, otherwise it will be retransmitted.")
+			request.respond(response)
+		}
+	}
+	
+	/*
+	 * Defines a Level1 resource with a GET Request.
+	 * 
+	 */
+	private static class Level1 extends ReadOnlyResource {
+		
+		new() {
+			super("level1")
+			setResourceName("GET info from the Level 1")
+		}
+		
+		@Override
+		override void performGet(GetRequest request) {
+			var response = new Response(Code.RESP_CONTENT)
+			response.setPayload("This is the first level")
+			request.respond(response)
+		}
+	}
+	
+	/*
+	 * Defines a Level2 resource with a GET Request.
+	 * 
+	 */
+	private static class Level2 extends ReadOnlyResource {
+		
+		new() {
+			super("level2")
+			setResourceName("GET info from the Level 2")
+		}
+		
+		@Override
+		override void performGet(GetRequest request) {
+			var response = new Response(Code.RESP_CONTENT)
+			response.setPayload("Welcome to the second level!!")
 			request.respond(response)
 		}
 	}

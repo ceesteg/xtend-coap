@@ -3,7 +3,7 @@ package com.xtend.coap.utils
 import java.nio.ByteBuffer
 import java.util.Random
 
-import com.xtend.coap.endpoint.Endpoint
+import com.xtend.coap.message.MessageSender
 
 class HexUtils {
 
@@ -59,8 +59,8 @@ class HexUtils {
     	var random = new Random
 		var lengthInt = random.nextInt(4) + 1
 		var lengthLong = random.nextInt(4) + 5
-		var tokL = HexUtils.longToBytes(Endpoint.generateToken(lengthLong), lengthLong)
-		System.out.println(HexUtils.hex(HexUtils.intToBytes(Endpoint.generateToken(lengthInt).intValue, lengthInt)))
+		var tokL = HexUtils.longToBytes(MessageSender.generateToken(lengthLong), lengthLong)
+		System.out.println(HexUtils.hex(HexUtils.intToBytes(MessageSender.generateToken(lengthInt).intValue, lengthInt)))
     	System.out.println(HexUtils.hex(tokL))
     	System.out.println(HexUtils.bytesToLong(tokL))
     }

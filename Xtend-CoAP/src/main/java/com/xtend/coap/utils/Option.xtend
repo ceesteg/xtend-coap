@@ -9,6 +9,7 @@ class Option {
 	val public static URI_HOST            = 3
 	val public static ETAG                = 4
 	val public static IF_NONE_MATCH       = 5
+	val public static OBSERVE             = 6 // draft-ietf-core-observe-14
 	val public static URI_PORT            = 7
 	val public static LOCATION_PATH       = 8
 	val public static URI_PATH            = 11
@@ -188,6 +189,8 @@ class Option {
 				return HexUtils.hex(getRawValue)
 			case IF_NONE_MATCH:
 				return ""
+			case OBSERVE:
+				return String.valueOf(getIntValue)
 			case URI_PORT:
 				return String.valueOf(getIntValue)
 			case LOCATION_PATH:
@@ -227,6 +230,8 @@ class Option {
 				return "ETag"
 			case IF_NONE_MATCH:
 				return "If-None-Match"
+			case OBSERVE:
+				return "Observe"
 			case URI_PORT:
 				return "Uri-Port"
 			case LOCATION_PATH:
@@ -266,6 +271,8 @@ class Option {
 				return OptionFormat.OPAQUE
 			case IF_NONE_MATCH:
 				return OptionFormat.EMPTY
+			case OBSERVE:
+				return OptionFormat.UINT
 			case URI_PORT:
 				return OptionFormat.UINT
 			case LOCATION_PATH:
@@ -305,6 +312,8 @@ class Option {
 				return new Option (newByteArrayOfSize(0), ETAG)
 			case IF_NONE_MATCH:
 				return new Option ("", IF_NONE_MATCH)
+			case OBSERVE:
+				return new Option ("", OBSERVE)
 			case URI_PORT:
 				return null
 			case LOCATION_PATH:

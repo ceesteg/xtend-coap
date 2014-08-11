@@ -14,11 +14,13 @@ import com.xtend.coap.message.response.ResponseHandler
 import com.xtend.coap.layers.Communicator
 import com.xtend.coap.utils.MessageType
 import com.xtend.coap.utils.Code
+import com.xtend.coap.utils.Option
 
 class Request extends Message {
 	
-	static Communicator DEFAULT_COMM
 	val static TIMEOUT_RESPONSE = new Response
+	val static startTime = System.currentTimeMillis
+	static Communicator DEFAULT_COMM
 	
 	Communicator communicator
 	List<ResponseHandler> responseHandlers
@@ -74,7 +76,20 @@ class Request extends Message {
 			} else {
 				response.setType(getType)
 			}
-		}		
+		}	
+		
+		var observeOpt = getFirstOption(Option.OBSERVE)
+		if (observeOpt != null && !response.hasOption(Option.OBSERVE)) {
+			
+			// 16-bit second counter
+			var secs = ((System.currentTimeMillis - startTime) / 1000).intValue.bitwiseAnd(0xFFFF)
+			
+			response.setOption(new Option(secs, Option.OBSERVE))
+			
+			if (response.isConfirmable()) {
+				response.setType(MessageType.NON_CONFIRMABLE)
+			}
+		}	
 		
 		if (communicator != null) {
 			try {

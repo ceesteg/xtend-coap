@@ -350,21 +350,53 @@ class Message {
 	 * @param uri The URI to which the current message URI should be set to
 	 */
 	def void setURI(URI uri) {
+		// include Uri Options as specified in 
+		// draft-ietf-core-coap-05, section 6.3
+		
+		// TODO unclear when/how to include Uri-Host and Uri-Port options
+		
 		if (uri != null) {
-			var path = uri.getPath
-			if (path != null && path.length > 1) {
-				setOption(new Option(path.substring(1), Option.URI_PATH))
-			}
-			var query = uri.getQuery
-			if (query != null) {
-				var uriQuery = new ArrayList<Option>
-				for (String argument : query.split("&")) {
-					uriQuery.add(new Option(argument, Option.URI_QUERY))
+			
+			// set Uri-Path options
+			var path = uri.getPath();
+			if (path != null && path.length() > 1) {
+				
+//				setOption(new Option(path.substring(1), Option.URI_PATH));
+				
+				var uriPaths = new ArrayList<Option>();
+				for (String segment : path.split("/")) {
+					
+					// handle non-empty segments only
+					if (!segment.isEmpty()) {
+						
+						// create a new Uri-Path option from the segment
+						var uriPath = new Option(segment, Option.URI_PATH)
+					
+						// add the option to the list
+						uriPaths.add(uriPath);
+					}
 				}
-				setOptions(Option.URI_QUERY, uriQuery)
+				
+				setOptions(Option.URI_PATH, uriPaths)
+
 			}
+			
+			// set Uri-Query options
+			var query = uri.getQuery();
+			if (query != null) {
+
+				// split the query into arguments
+				var uriQuery = new ArrayList<Option>();
+				for (String argument : query.split("&")) {
+					
+					// create a new Uri-Query option from the argument
+					uriQuery.add(new Option(argument, Option.URI_QUERY));
+				}
+				
+				setOptions(Option.URI_QUERY, uriQuery);
+			}
+			this.uri = uri
 		}
-		this.uri = uri
 	}
 	
 	def setURI(String uri) {
@@ -515,6 +547,7 @@ class Message {
 			list = new ArrayList<Option>
 			optionMap.put(opt.getOptionNumber, list)
 		}
+		
 		list.add(opt)
 	}	
 	
@@ -574,7 +607,16 @@ class Message {
 	def getOptionList() {
 		var list = new ArrayList<Option>
 		for (List<Option> option : optionMap.values) {
-			list.addAll(option)
+//			if (option.get(0).optionNumber == Option.URI_QUERY) {
+//				list.addAll(option)
+//			} else {
+//				list.add(option.get(0))
+//			}
+			for (Option opt : option) {
+				if (opt.getRawValue.length != 0) {
+					list.add(opt)
+				}
+			}
 		}
 		return list
 	}	

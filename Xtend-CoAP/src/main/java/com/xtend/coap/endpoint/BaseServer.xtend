@@ -1,24 +1,25 @@
 package com.xtend.coap.endpoint
 
-import java.io.ByteArrayOutputStream
-import java.net.SocketException
-
-import com.xtend.coap.message.Message
-import com.xtend.coap.message.MessageReceiver
-import com.xtend.coap.message.MessageHandler
-import com.xtend.coap.message.resource.Resource
-import com.xtend.coap.message.resource.DiscoveryResource
-import com.xtend.coap.message.resource.ReadOnlyResource
-import com.xtend.coap.message.resource.LocalResource
-import com.xtend.coap.message.request.Request
-import com.xtend.coap.message.request.GetRequest
-import com.xtend.coap.message.response.Response
-import com.xtend.coap.message.request.PutRequest
 import com.xtend.coap.layers.Communicator
+import com.xtend.coap.message.Message
+import com.xtend.coap.message.MessageHandler
+import com.xtend.coap.message.MessageReceiver
+import com.xtend.coap.message.request.GetRequest
+import com.xtend.coap.message.request.PutRequest
+import com.xtend.coap.message.request.Request
+import com.xtend.coap.message.resource.DiscoveryResource
+import com.xtend.coap.message.resource.LocalResource
+import com.xtend.coap.message.resource.ReadOnlyResource
+import com.xtend.coap.message.resource.Resource
+import com.xtend.coap.message.response.Response
 import com.xtend.coap.utils.Code
 import com.xtend.coap.utils.Option
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
+import java.net.SocketException
+import com.xtend.coap.message.MessageSender
 
-class BaseServer extends Endpoint implements MessageReceiver, MessageHandler {
+class BaseServer extends MessageSender implements MessageReceiver, MessageHandler {
 		
 	val public static DEFAULT_PORT = Communicator.DEFAULT_PORT
 	
@@ -30,7 +31,7 @@ class BaseServer extends Endpoint implements MessageReceiver, MessageHandler {
 	new(int port) throws SocketException {
 		this.communicator = new Communicator(port, false)
 		this.communicator.registerReceiver(this)
-		this.rootResource = new RootResource(this)
+		this.rootResource = new BaseServer.RootResource(this)
 		this.wellKnownResource = new LocalResource(".well-known", true)
 		this.wellKnownResource.setResourceName("")
 		this.discoveryResource = new DiscoveryResource(rootResource)
@@ -76,6 +77,9 @@ class BaseServer extends Endpoint implements MessageReceiver, MessageHandler {
 			
 			var response = new Response(Code.RESP_CONTENT)
 			var data = new ByteArrayOutputStream
+			var out = new PrintStream(data)
+			
+			endPoint.printEndpointInfo(out)
 			
 			response.setPayload(data.toByteArray)
 			
@@ -89,6 +93,14 @@ class BaseServer extends Endpoint implements MessageReceiver, MessageHandler {
 			var resource = getResource(resourceIdentifier);
 			if (resource != null) {
 				request.dispat(resource)
+				// check if resource is to be observed
+				if (request instanceof GetRequest && request.hasOption(Option.OBSERVE)) {
+					// establish new observation relationship
+					resource.addObserveRequest(request as GetRequest)
+				} else if (resource.isObserved(request.endpointID)) {
+					// terminate observation relationship on that resource
+					resource.removeObserveRequest(request.endpointID)
+				}
 			} else if (request instanceof PutRequest) {
 				createByPut(request as PutRequest)
 			} else {
@@ -162,5 +174,14 @@ class BaseServer extends Endpoint implements MessageReceiver, MessageHandler {
 
 	override void handleResponse(Response response) {
 		response.handle
+	}
+	
+	def protected void printEndpointInfo(PrintStream out) {
+		
+		// print disclaimer etc.
+		out.println("************************************************************")
+		out.println("This CoAP endpoint is using the Xtend-CoAP library")
+		out.println("developed by César Estebas Gómez")
+		out.println("************************************************************")
 	}
 }
