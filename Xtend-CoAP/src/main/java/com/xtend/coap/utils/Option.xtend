@@ -313,7 +313,7 @@ class Option {
 			case IF_NONE_MATCH:
 				return new Option ("", IF_NONE_MATCH)
 			case OBSERVE:
-				return new Option ("", OBSERVE)
+				return new Option (0, OBSERVE)
 			case URI_PORT:
 				return null
 			case LOCATION_PATH:
@@ -321,13 +321,13 @@ class Option {
 			case URI_PATH:
 				return new Option ("", URI_PATH)
 			case CONTENT_FORMAT:
-				return new Option ("", CONTENT_FORMAT)
+				return new Option (0, CONTENT_FORMAT)
 			case MAX_AGE:
 				return new Option (60, MAX_AGE)
 			case URI_QUERY:
 				return new Option ("", URI_QUERY)
 			case ACCEPT:
-				return new Option ("", ACCEPT)
+				return new Option (0, ACCEPT)
 			case LOCATION_QUERY:
 				return new Option ("", LOCATION_QUERY)
 			case PROXY_URI:
@@ -335,7 +335,7 @@ class Option {
 			case PROXY_SCHEME:
 				return new Option ("", PROXY_SCHEME)
 			case SIZE1:
-				return new Option ("", SIZE1)
+				return new Option (0, SIZE1)
 			case TOKEN:
 				return new Option (newByteArrayOfSize(0), TOKEN)
 			default:

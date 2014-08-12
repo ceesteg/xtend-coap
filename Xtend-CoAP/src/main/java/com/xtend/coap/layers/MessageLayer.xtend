@@ -89,9 +89,6 @@ class MessageLayer extends UpperLayer {
 					System.out.println("[" + getClass.getName + "] Replied to duplicate Confirmable: " + msg.key)
 					return
 				}
-			} else {
-				System.out.println("[" + getClass.getName + "] Duplicate dropped: " + msg.key)
-				return
 			}
 		} else {
 			dupCache.put(msg.key, msg)

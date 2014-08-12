@@ -46,15 +46,15 @@ class SampleClient extends MessageSender {
 //		var String payload = "ponlo en mayusculas"
 //		var loop   = false
 		// parametros de prueba 4
-//		var String method  = "PUT"
-//		var String uri     = "coap://localhost/storage"
-//		var String payload = "data 1"
-//		var loop   = false
+		var String method  = "PUT"
+		var String uri     = "coap://localhost/storage"
+		var String payload = "data 2"
+		var loop   = false
 		// parametros de prueba 5
-//		var String method  = "GET"
+//		var String method  = "OBSERVE"
 //		var String uri     = "coap://localhost/storage"
 //		var String payload = null
-//		var loop   = false
+//		var loop   = true
         // parametros de prueba 6
 //		var String method  = "GET"
 //		var String uri     = "coap://localhost/separate"
@@ -66,10 +66,10 @@ class SampleClient extends MessageSender {
 //		var String payload = null
 //		var loop   = false
 		// parametros de prueba 8
-		var String method  = "GET"
-		var String uri     = "coap://localhost/level1"
-		var String payload = null
-		var loop   = false
+//		var String method  = "GET"
+//		var String uri     = "coap://localhost/level1"
+//		var String payload = null
+//		var loop   = false
 		// parametros de prueba 8
 //		var String method  = "GET"
 //		var String uri     = "coap://localhost/level1/level2"
@@ -122,7 +122,7 @@ class SampleClient extends MessageSender {
 		}
 		
 		if (method.equals("OBSERVE")) {
-			request.setOption(new Option(60, Option.OBSERVE))
+			request.setOption(new Option(0, Option.OBSERVE))
 		}
 		
 		if (uri == null) {
@@ -147,12 +147,15 @@ class SampleClient extends MessageSender {
 			System.err.println("Failed to execute request: " + e.getMessage)
 			return
 		}
+		
+		var Communicator com = null
+		var obsCont = 0
 		do {
-			System.out.println("Receiving response...")
 			var Response response = null
 			try {
 				response = request.receiveResponse
 				if (response != null && response.isEmptyACK) {
+					System.out.println("Receiving response...")
 					response.log
 					System.out.println("Request acknowledged, waiting for separate response...")
 					response = request.receiveResponse
@@ -161,12 +164,15 @@ class SampleClient extends MessageSender {
 				System.err.println("Failed to receive response: " + e.getMessage)
 				return
 			}
+
 			if (response != null) {
 				response.log
 				System.out.println("Round Trip Time (ms): " + response.getRTT)
-				if (response.getType != MessageType.ACKNOWLEDGMENT) {
+				if (response.getType == MessageType.CONFIRMABLE) {
 					var reply = response.newReply(true)
-					var com = new Communicator(Communicator.DEFAULT_PORT+1, true)
+					if(com == null) {
+						com = new Communicator(Communicator.DEFAULT_PORT+1, true)
+					}
 					com.sendMessage(reply)
 				}
 				if (response.hasFormat(ContentFormat.LINK_FORMAT)) {
@@ -187,6 +193,31 @@ class SampleClient extends MessageSender {
 				var elapsed = System.currentTimeMillis - request.getTimestamp
 				System.out.println("Request timed out (ms): " + elapsed)
 				loop = false
+			}
+			if (request.hasOption(Option.OBSERVE)) {
+				if (obsCont > 1) {
+					System.out.println("Out observe...")
+					var request1 = Request.newRequest(method)
+					try {
+						request1.setURI(uri)
+					} catch (URISyntaxException e) {
+						System.err.println("Failed to parse URI: " + e.getMessage)
+						return
+					}
+					request1.setOption(new Option(1, Option.OBSERVE))
+					request1.setID(nextMessageID("C"))
+					generateTokenForRequest(request1)
+					request1.enableResponseQueue(true)
+					request1.setType(MessageType.NON_CONFIRMABLE)
+					loop = false
+					try {
+						request1.execute
+					} catch (IOException e) {
+						System.err.println("Failed to execute request: " + e.getMessage)
+						return
+					}
+				}
+				obsCont++
 			}
 		} while (loop)
 	}

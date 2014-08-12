@@ -18,6 +18,7 @@ import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.net.SocketException
 import com.xtend.coap.message.MessageSender
+import com.xtend.coap.utils.HexUtils
 
 class BaseServer extends MessageSender implements MessageReceiver, MessageHandler {
 		
@@ -96,7 +97,22 @@ class BaseServer extends MessageSender implements MessageReceiver, MessageHandle
 				// check if resource is to be observed
 				if (request instanceof GetRequest && request.hasOption(Option.OBSERVE)) {
 					// establish new observation relationship
-					resource.addObserveRequest(request as GetRequest)
+					var obsVal = 0
+					try {
+						obsVal = HexUtils.bytesToInt(request.getFirstOption(Option.OBSERVE).rawValue)
+					} catch (NumberFormatException e) {
+						System.out.println("[" + getClass.getName + "] Bad OBSERVE option value: " + obsVal)
+						request.respond(Code.RESP_BAD_OPTION)
+					}
+					
+					if (obsVal == 0) {
+						resource.addObserveRequest(request as GetRequest)
+					} else if (obsVal == 1) {
+						resource.removeObserveRequest(request.endpointID)
+					} else {
+						System.out.println("[" + getClass.getName + "] Bad OBSERVE option value: " + obsVal)
+						request.respond(Code.RESP_BAD_OPTION)
+					}
 				} else if (resource.isObserved(request.endpointID)) {
 					// terminate observation relationship on that resource
 					resource.removeObserveRequest(request.endpointID)
