@@ -290,14 +290,14 @@ class Message {
 		var bytesLeft = datagram.readBytesLeft
 		var aux = new DatagramUtils(bytesLeft)
 		datagram = new DatagramUtils(bytesLeft)
-		if (aux.read(OPTION_DELTA) == 0x0) {
-			end = true
-		}
+//		if (aux.read(OPTION_DELTA) == 0x0) {
+//			end = true
+//		}
 		while (!end){
 			var optionDelta = datagram.read(OPTION_DELTA)
-			if (optionDelta == 0x0) {
-				end = true
-			}
+//			if (optionDelta == 0x0) {
+//				end = true
+//			}
 			var optionLength = datagram.read(OPTION_LENGTH)
 			if (optionDelta == 0xD) {
 				optionDelta = datagram.read(OPTION_EXT_13) + 0xD
@@ -325,15 +325,18 @@ class Message {
 
 			
 			bytesLeft = datagram.readBytesLeft
-			aux = new DatagramUtils(bytesLeft)
-			datagram = new DatagramUtils(bytesLeft)
-			if (Arrays.equals(aux.readBytes(msg.payload_marker.length), msg.payload_marker)) {
-				end = true		
-				datagram.readBytes(msg.payload_marker.length)
-				msg.payload = datagram.readBytesLeft
-				if (msg.payload.length == 0) {
-					System.err.println("ERROR: Message format error.")
-					return null
+			if (bytesLeft.length == 0) {
+				end = true	
+			} else {
+				aux = new DatagramUtils(bytesLeft)
+				datagram = new DatagramUtils(bytesLeft)
+				if (Arrays.equals(aux.readBytes(msg.payload_marker.length), msg.payload_marker)) {	
+					datagram.readBytes(msg.payload_marker.length)
+					msg.payload = datagram.readBytesLeft
+					if (msg.payload.length == 0) {
+						System.err.println("ERROR: Message format error.")
+						return null
+					}
 				}
 			}
 		}
@@ -356,7 +359,7 @@ class Message {
 		// TODO unclear when/how to include Uri-Host and Uri-Port options
 		
 		if (uri != null) {
-			
+
 			// set Uri-Path options
 			var path = uri.getPath();
 			if (path != null && path.length() > 1) {

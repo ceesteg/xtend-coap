@@ -1,73 +1,99 @@
 package com.xtend.coap.utils
 
-import java.nio.ByteBuffer
 import java.io.UnsupportedEncodingException
+import java.nio.ByteBuffer
 
+/**
+ * Class for CoAP Message Options as defined in rfc7252, section 12.2 and draft-ietf-core-observe-14, section 2. 
+ *
+ * @author César Estebas Gómez.
+ * @version Xtend-CoAP_v1.0.
+ */
 class Option {
 	
-	val public static IF_MATCH            = 1
-	val public static URI_HOST            = 3
-	val public static ETAG                = 4
-	val public static IF_NONE_MATCH       = 5
-	val public static OBSERVE             = 6 // draft-ietf-core-observe-14
-	val public static URI_PORT            = 7
-	val public static LOCATION_PATH       = 8
-	val public static URI_PATH            = 11
-	val public static CONTENT_FORMAT      = 12
-	val public static MAX_AGE             = 14
-	val public static URI_QUERY           = 15
-	val public static ACCEPT              = 17
-	val public static LOCATION_QUERY      = 20
-	val public static PROXY_URI           = 35
-	val public static PROXY_SCHEME        = 39
-	val public static SIZE1               = 60
-	val public static TOKEN               = 13  // Token option
-
-    val public static OPTION_JUMP = 14
+	val public static IF_MATCH       = 1
+	val public static URI_HOST       = 3
+	val public static ETAG           = 4
+	val public static IF_NONE_MATCH  = 5
+	val public static OBSERVE        = 6 
+	val public static URI_PORT       = 7
+	val public static LOCATION_PATH  = 8
+	val public static URI_PATH       = 11
+	val public static CONTENT_FORMAT = 12
+	val public static MAX_AGE        = 14
+	val public static URI_QUERY      = 15
+	val public static ACCEPT         = 17
+	val public static LOCATION_QUERY = 20
+	val public static PROXY_URI      = 35
+	val public static PROXY_SCHEME   = 39
+	val public static SIZE1          = 60
 	
 	ByteBuffer value
-	int optionNr
+	int optionNumber
 	
-	new(byte[] raw, int nr) {
-		value = ByteBuffer.wrap(raw)
-		optionNr = nr
-	}
-
-	new(String str, int nr) {
-		value = ByteBuffer.wrap(str.getBytes)
-		optionNr = nr
-	}
-	
-	new(int valueAux, int nr) {
-		setIntValue(valueAux)
-		optionNr = nr
-	}
-	
-	def private void setIntValue(int valueAux) {
-		var aux = HexUtils.intToBytes(valueAux, 4)
-		value = ByteBuffer.allocate(4).put(aux, 0, aux.length)
-	}
-	
-	/*
-	 * This method sets the number of the current option
+	/**
+	 * Initializes a new Option object.
 	 * 
-	 * @param nr The option number.
+	 * @param raw Value as byte array.
+	 * @param number Option number.
 	 */
-	def setOptionNr (int nr) {
-		optionNr = nr
+	new (byte[] raw, int number) {
+		value = ByteBuffer.wrap(raw)
+		optionNumber = number
+	}
+
+	/**
+	 * Initializes a new Option object.
+	 * 
+	 * @param str Value as string.
+	 * @param number Option number.
+	 */
+	new (String str, int number) {
+		value = ByteBuffer.wrap(str.getBytes)
+		optionNumber = number
 	}
 	
-
+	/**
+	 * Initializes a new Option object.
+	 * 
+	 * @param value Value as integer.
+	 * @param number Option number.
+	 */
+	new (int value, int number) {
+		setIntValue(value)
+		optionNumber = number
+	}
+	
+	/**
+	 * Sets the value with an integer value.
+	 * 
+	 * @param value Value as integer.
+	 */
+	def private void setIntValue(int value) {
+		var aux = HexUtils.intToBytes(value, 4)
+		this.value = ByteBuffer.allocate(4).put(aux, 0, aux.length)
+	}
+	
+	/**
+	 * Sets the number of the current option.
+	 * 
+	 * @param number The option number.
+	 */
+	def setOptionNumber (int number) {
+		optionNumber = number
+	}
+	
+	/**
+	 * Sets the value of the current option.
+	 * 
+	 * @param value Value as byte array.
+	 */
 	def setValue (byte[] value) {
 		this.value = ByteBuffer.wrap(value)
 	}
 	
-	
-	// Functions ///////////////////////////////////////////////////////////////
-	
-	
-	/*
-	 * This method returns the data of the current option as byte array
+	/**
+	 * Method that returns the data of the current option as byte array.
 	 * 
 	 * @return The byte array holding the data
 	 */
@@ -75,11 +101,15 @@ class Option {
 		return value.array
 	}
 
-	@Override
+	/**
+	 * Method that returns the hash code of the current option.
+	 * 
+	 * @return The hash code.
+	 */
 	override hashCode() {
 		val prime = 31
 		var result = 1
-		result = prime * result + optionNr
+		result = prime * result + optionNumber
 		var aux = 0
 		if (value == null) {
 			aux = 0
@@ -90,12 +120,17 @@ class Option {
 		return result
 	}
 	
-	@Override
+	/**
+	 * Method to compare the current option with another option.
+	 * 
+	 * @param obj The option to compare with.
+	 * @return Returns true if equal and false if not.
+	 */
 	override equals(Object obj) {
 		var res = false
 		if (obj != null) {
 			var other = obj as Option
-			if (optionNr == other.optionNr) {
+			if (optionNumber == other.optionNumber) {
 				if (other.value.array.length == value.array.length) {
 					var cont = 0
 					var valid = true
@@ -114,39 +149,39 @@ class Option {
 		return res
 	}
 
-	/*
-	 * This method returns the option number of the current option
+	/**
+	 * Method that returns the option number of the current option.
 	 * 
-	 * @return The option number as integer
+	 * @return The option number as integer.
 	 */
 	def getOptionNumber() {
-		return optionNr
+		return optionNumber
 	}
 	
-	/*
-	 * This method returns the name that corresponds to the option number.
+	/**
+	 * Method that returns the name of to the option number.
 	 * 
-	 * @return The name of the option
+	 * @return The name of the option.
 	 */
 	def String getName() {
-		return toString(optionNr)
+		return toString(optionNumber)
 	}
 
-	/*
-	 * This method returns the length of the option's data in the ByteBuffer
+	/**
+	 * Method that returns the length of the option's value.
 	 * 
-	 * @return The length of the data stored in the ByteBuffer as number of bytes
+	 * @return The length of the data stored in the value ByteBuffer.
 	 */
 	def getLength() {
 		return value.capacity
 	}
 	
-	/*
-	 * This method returns the value of the option's data as string
+	/**
+	 * Method that returns the current option's value as string.
 	 * 
-	 * @return The string representation of the current option's data
+	 * @return The string representation of the current option's value.
 	 */
-	def getStringValue () {
+	def getStringValue() {
 		var result = ""
 		try {
 			result = new String(value.array, "UTF8")
@@ -156,31 +191,31 @@ class Option {
 		return result
 	}
 	
-	/*
-	 * This method returns the value of the option's data as integer
+	/**
+	 * Method that returns the current option's value as integer.
 	 * 
-	 * @return The integer representation of the current option's data
+	 * @return The integer representation of the current option's value.
 	 */
 	def getIntValue () {
 		return HexUtils.bytesToInt(value.array)
 	}
 	
-	/*
-	 * This method returns the current option's data as byte array
+	/**
+	 * Method that returns the current option's value as byte array.
 	 * 
-	 * @return The current option's data as byte array.
+	 * @return The current option's value as byte array.
 	 */
 	def getValue () {
 		return value
 	}
 
-	/*
-	 * Returns a human-readable string representation of the option's value
+	/**
+	 * Returns a human-readable string representation of the option's value.
 	 * 
-	 * @Return The option value represented as a string
+	 * @Return The option value represented as a string.
 	 */
 	def getDisplayValue() {
-		switch (optionNr) {
+		switch (optionNumber) {
 			case IF_MATCH:
 				return HexUtils.hex(getRawValue)
 			case URI_HOST:
@@ -213,13 +248,16 @@ class Option {
 				return getStringValue
 			case SIZE1:
 				return String.valueOf(getIntValue)
-			case TOKEN:
-				return HexUtils.hex(getRawValue)
 			default:
 				return HexUtils.hex(getRawValue)
 		}
 	}
 
+	/**
+	 * Returns a human-readable string representation of the option's name.
+	 * 
+	 * @Return The option name.
+	 */
 	def static String toString(int optionNumber) {
 		switch (optionNumber) {
 			case IF_MATCH:
@@ -254,13 +292,17 @@ class Option {
 				return "Proxy-Scheme"
 			case SIZE1:
 				return "Size1"
-			case TOKEN:
-				return "Token"
 			default:
 				return "Unknown option number " + optionNumber
 		}
 	}
 	
+	/**
+	 * Returns the option format value represented by the optionNumber param.
+	 * 
+	 * @param optionNumber Number of the option as integer.
+	 * @Return The option number value of the option.
+	 */
 	def static OptionFormat getFormatByNr (int optionNumber) {
 		switch (optionNumber) {
 			case IF_MATCH:
@@ -295,13 +337,17 @@ class Option {
 				return OptionFormat.STRING
 			case SIZE1:
 				return OptionFormat.UINT
-			case TOKEN:
-				return OptionFormat.OPAQUE
 			default:
 				return OptionFormat.UNKNOWN
 		}
 	}
 	
+	/**
+	 * Returns an option with the default value.
+	 * 
+	 * @param optionNumber Number of the option as integer.
+	 * @Return The default option generated.
+	 */
 	def static Option getDefaultOption(int optionNumber) {
 		switch(optionNumber) {
 			case IF_MATCH:
@@ -336,8 +382,6 @@ class Option {
 				return new Option ("", PROXY_SCHEME)
 			case SIZE1:
 				return new Option (0, SIZE1)
-			case TOKEN:
-				return new Option (newByteArrayOfSize(0), TOKEN)
 			default:
 				return null
 		}

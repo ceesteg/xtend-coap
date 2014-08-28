@@ -3,10 +3,23 @@ package com.xtend.coap.message
 import java.util.Random
 
 import com.xtend.coap.message.request.Request
+import com.xtend.coap.layers.Communicator
+import java.net.SocketException
 
 class MessageSender {
 	
 	static int messageID = 0
+	val public static DEFAULT_PORT = Communicator.DEFAULT_PORT
+	
+	protected Communicator communicator
+	
+	new (int port, boolean daemon) throws SocketException {
+		this.communicator = new Communicator(port, daemon)
+	}
+	
+	def getCommunicator() {
+		return this.communicator
+	}
 	
 	def static int nextMessageID(String typeEndpoint) {
 		if (messageID == 0) {
@@ -24,8 +37,12 @@ class MessageSender {
 		switch (typeEndpoint) {
 			case ("C"):
 				messageID = 0x1001
+			case ("S"):
+				messageID = 0x2001	
+			case ("P"):
+				messageID = 0x3001
 			default:
-				messageID = 0x2001
+				messageID = 0x4001
 		}
 	}
 	

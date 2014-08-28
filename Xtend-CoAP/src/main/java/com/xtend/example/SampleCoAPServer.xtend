@@ -1,32 +1,34 @@
 package com.xtend.example
 
-import java.net.SocketException
-
-import com.xtend.coap.message.resource.ReadOnlyResource
-import com.xtend.coap.message.resource.LocalResource
-import com.xtend.coap.message.request.GetRequest
+import com.xtend.coap.endpoint.BaseServer
+import com.xtend.coap.endpoint.EndPoint
 import com.xtend.coap.message.request.DeleteRequest
+import com.xtend.coap.message.request.GetRequest
 import com.xtend.coap.message.request.PostRequest
 import com.xtend.coap.message.request.PutRequest
 import com.xtend.coap.message.request.Request
+import com.xtend.coap.message.resource.LocalResource
+import com.xtend.coap.message.resource.ReadOnlyResource
 import com.xtend.coap.message.response.Response
 import com.xtend.coap.utils.Code
 import com.xtend.coap.utils.Option
-import com.xtend.coap.endpoint.BaseServer
+import java.net.SocketException
 
-class SampleServer extends BaseServer {
+import static com.xtend.coap.message.MessageSender.*
+
+class SampleCoAPServer extends BaseServer { 
 
 	/*
 	 * Constructor for a new SampleServer
 	 * 
 	 */
 	new() throws SocketException {
-		addResource(new sayHelloResource)
-		addResource(new StorageResource)
-		addResource(new ToUpperResource)
-		addResource(new SeparateResource)
-		var level1 = new Level1
-		level1.addSubResource(new Level2)
+		addResource(new SampleCoAPServer.sayHelloResource)
+		addResource(new SampleCoAPServer.StorageResource)
+		addResource(new SampleCoAPServer.ToUpperResource)
+		addResource(new SampleCoAPServer.SeparateResource)
+		var level1 = new SampleCoAPServer.Level1
+		level1.addSubResource(new SampleCoAPServer.Level2)
 		addResource(level1)
 	}
 
@@ -96,7 +98,7 @@ class SampleServer extends BaseServer {
 		
 		new() {
 			this("storage")
-			isRoot = true
+			isRoot = false
 		}
 		
 		@Override
@@ -131,7 +133,7 @@ class SampleServer extends BaseServer {
 		
 		@Override
 		override void createNew(PutRequest request, String newIdentifier) {
-			var resource = new StorageResource(newIdentifier)
+			var resource = new SampleCoAPServer.StorageResource(newIdentifier)
 			addSubResource(resource)
 			resource.storeData(request)
 			request.respond(Code.RESP_CREATED)
@@ -208,20 +210,11 @@ class SampleServer extends BaseServer {
 		}
 	}
 
-	// Logging /////////////////////////////////////////////////////////////////
-	
-	@Override
-	override void handleRequest(Request request) {
-		System.out.println("Incoming request:")
-		request.log
-		super.handleRequest(request)
-	}
-
 	// Application entry point /////////////////////////////////////////////////
 	
 	def static void main(String[] args) {
 		try {
-			var BaseServer server = new SampleServer
+			var EndPoint server = new SampleCoAPServer
 			System.out.println("SampleServer listening at port " + server.port + ".")
 		} catch (SocketException e) {
 			System.err.printf("Failed to create SampleServer: " + e.getMessage)

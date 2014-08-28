@@ -2,3 +2,7 @@
 /.Endpoint.java._trace
 /BaseServer.java
 /Endpoint.java
+/.EndPoint.java._trace
+/.BaseProxy.java._trace
+/.BaseCoAP2HTTPProxy.java._trace
+/.BaseHTTP2CoAPProxy.java._trace

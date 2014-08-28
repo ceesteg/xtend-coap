@@ -2,3 +2,14 @@
 /.SampleServer.java._trace
 /SampleClient.java
 /SampleServer.java
+/.PruebaPost.java._trace
+/.sampleProxy.java._trace
+/.SampleProxy.java._trace
+/.BaseProxy.java._trace
+/.SampleCoAP2HTTPProxy.java._trace
+/.SampleCoAPClient.java._trace
+/.SampleCoAPServer.java._trace
+/.TestHttpServer.java._trace
+/.SampleHttpClient.java._trace
+/.BaseHTTP2CoAPProxy.java._trace
+/.SampleHTTP2CoAPProxy.java._trace

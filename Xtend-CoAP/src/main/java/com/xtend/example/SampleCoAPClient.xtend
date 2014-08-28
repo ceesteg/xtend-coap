@@ -8,22 +8,47 @@ import com.xtend.coap.message.resource.Resource
 import com.xtend.coap.message.request.Request
 import com.xtend.coap.utils.ContentFormat
 import com.xtend.coap.utils.MessageType
-import com.xtend.coap.layers.Communicator
 import com.xtend.coap.utils.Option
 import com.xtend.coap.message.MessageSender
+import java.net.SocketException
 
-class SampleClient extends MessageSender {
+class SampleCoAPClient extends MessageSender { 
 	
 	val static DISCOVERY_RESOURCE = "/.well-known/core"
 	val static IDX_METHOD  = 0
 	val static IDX_URI     = 1
 	val static IDX_PAYLOAD = 2
 	
+	new(int port, boolean daemon) throws SocketException {
+		super(port, daemon)
+	}
+	
 	/*
 	 * Main method of this client.
 	 */
 	def static void main(String[] args) {
-
+		var client = new SampleCoAPClient(MessageSender.DEFAULT_PORT+2, true)
+		client.startClient(args)
+	}
+	
+	/*
+	 * Outputs user guide of this program.
+	 * 
+	 */
+	def static void printInfo() {
+		System.out.println("CPrueba de cliente\n")
+		System.out.println("Usage: SampleClient [-l] METHOD URI [PAYLOAD]")
+		System.out.println("  METHOD  : {GET, POST, PUT, DELETE, DISCOVER, OBSERVE}")
+		System.out.println("  URI     : The URI to the remote endpoint or resource")
+		System.out.println("  PAYLOAD : The data to send with the request")
+		System.out.println("Options:")
+		System.out.println("  -l      : Wait for multiple responses\n")
+		System.out.println("Examples:")
+		System.out.println("  SampleClient DISCOVER coap://localhost")
+		System.out.println("  SampleClient POST coap://someServer.org:61616 my data")
+	}
+	
+	def void startClient(String[] args) {
 		// initialize parameters
 //		var String method  = null
 //		var String uri     = null
@@ -46,14 +71,16 @@ class SampleClient extends MessageSender {
 //		var String payload = "ponlo en mayusculas"
 //		var loop   = false
 		// parametros de prueba 4
-		var String method  = "PUT"
-		var String uri     = "coap://localhost/storage"
-		var String payload = "data 2"
-		var loop   = false
+//		var String method  = "PUT"
+//		var String uri     = "coap://localhost/storage"
+//		var String payload = "data 4"
+//		var String proxy_uri = ""
+//		var loop   = false
 		// parametros de prueba 5
 //		var String method  = "OBSERVE"
 //		var String uri     = "coap://localhost/storage"
 //		var String payload = null
+//		var String proxy_uri = ""
 //		var loop   = true
         // parametros de prueba 6
 //		var String method  = "GET"
@@ -74,7 +101,21 @@ class SampleClient extends MessageSender {
 //		var String method  = "GET"
 //		var String uri     = "coap://localhost/level1/level2"
 //		var String payload = null
+//		var String proxy_uri = null
 //		var loop   = false
+
+		// parametros de prueba proxy 1
+//		var String method  = "PUT"
+//		var String uri     = "http://localhost:8080/AplicacionTemperatura/temperatura"
+//		var String payload = "temperature=3"
+//		var String proxy_uri = "coap://localhost"
+//		var loop   = false
+		// parametros de prueba proxy 2
+		var String method  = "GET"
+		var String uri     = "http://localhost:8080/AplicacionTemperatura/temperatura"
+		var String payload = ""
+		var String proxy_uri = "coap://localhost"
+		var loop   = false
 
 		if (args.length == 0) {
 			printInfo
@@ -116,6 +157,10 @@ class SampleClient extends MessageSender {
 			return
 		}
 		var request = Request.newRequest(method)
+		
+		if(proxy_uri != null) {
+			request.setOption(new Option(proxy_uri, Option.PROXY_URI))
+		}
 		if (request == null) {
 			System.err.println("Unknown method: " + method)
 			return
@@ -133,10 +178,17 @@ class SampleClient extends MessageSender {
 		}
 		try {
 			request.setURI(uri)
+			request.setOption(new Option(request.URI.host, Option.URI_HOST))
+			var port = request.URI.port
+			if (port == -1) {
+				port = MessageSender.DEFAULT_PORT
+			}
+			request.setOption(new Option(port, Option.URI_PORT))
 		} catch (URISyntaxException e) {
 			System.err.println("Failed to parse URI: " + e.getMessage)
 			return
 		}
+		
 		request.setID(nextMessageID("C"))
 		generateTokenForRequest(request)
 		request.setPayload(payload)
@@ -147,8 +199,6 @@ class SampleClient extends MessageSender {
 			System.err.println("Failed to execute request: " + e.getMessage)
 			return
 		}
-		
-		var Communicator com = null
 		var obsCont = 0
 		do {
 			var Response response = null
@@ -170,10 +220,7 @@ class SampleClient extends MessageSender {
 				System.out.println("Round Trip Time (ms): " + response.getRTT)
 				if (response.getType == MessageType.CONFIRMABLE) {
 					var reply = response.newReply(true)
-					if(com == null) {
-						com = new Communicator(Communicator.DEFAULT_PORT+1, true)
-					}
-					com.sendMessage(reply)
+					communicator.sendMessage(reply)
 				}
 				if (response.hasFormat(ContentFormat.LINK_FORMAT)) {
 					var linkFormat = response.getPayloadString
@@ -199,7 +246,7 @@ class SampleClient extends MessageSender {
 					System.out.println("Out observe...")
 					var request1 = Request.newRequest(method)
 					try {
-						request1.setURI(uri)
+						request1.setURI(request.URI)
 					} catch (URISyntaxException e) {
 						System.err.println("Failed to parse URI: " + e.getMessage)
 						return
@@ -220,22 +267,5 @@ class SampleClient extends MessageSender {
 				obsCont++
 			}
 		} while (loop)
-	}
-	
-	/*
-	 * Outputs user guide of this program.
-	 * 
-	 */
-	def static void printInfo() {
-		System.out.println("CPrueba de cliente\n")
-		System.out.println("Usage: SampleClient [-l] METHOD URI [PAYLOAD]")
-		System.out.println("  METHOD  : {GET, POST, PUT, DELETE, DISCOVER, OBSERVE}")
-		System.out.println("  URI     : The URI to the remote endpoint or resource")
-		System.out.println("  PAYLOAD : The data to send with the request")
-		System.out.println("Options:")
-		System.out.println("  -l      : Wait for multiple responses\n")
-		System.out.println("Examples:")
-		System.out.println("  SampleClient DISCOVER coap://localhost")
-		System.out.println("  SampleClient POST coap://someServer.org:61616 my data")
 	}
 }

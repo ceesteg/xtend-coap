@@ -5,10 +5,12 @@ import java.net.DatagramPacket
 import java.net.SocketException
 import java.io.IOException
 import java.util.Arrays
-import java.net.URI
-import java.net.URISyntaxException
 
 import com.xtend.coap.message.Message
+import com.xtend.coap.utils.Option
+import java.net.InetAddress
+import java.net.URI
+import java.net.URISyntaxException
 
 class UDPLayer extends Layer {
 
@@ -16,7 +18,6 @@ class UDPLayer extends Layer {
 	
 	val public static DEFAULT_PORT      = 5683
 	val public static String URI_SCHEME_NAME = "coap"
-	val public static RX_BUFFER_SIZE    = 1024
 	
 	DatagramSocket socket
 	ReceiverThread receiverThread	
@@ -56,7 +57,7 @@ class UDPLayer extends Layer {
 		@Override
 		override public void run() {
 			while (true) {
-				var buffer = newByteArrayOfSize(RX_BUFFER_SIZE)
+				var buffer = newByteArrayOfSize(1024)
 				var datagram = new DatagramPacket(buffer, buffer.length)
 				try {
 					udpLayer.getSocket.receive(datagram)
@@ -107,10 +108,27 @@ class UDPLayer extends Layer {
 	@Override
 	override protected void doSendMessage(Message msg) throws IOException {
 		var uri = msg.getURI
-		var address = msg.getAddress
-		var port = -1
-		if(uri != null){
-			port = uri.getPort
+		var InetAddress address = null
+		var port = DEFAULT_PORT
+		if (msg.hasOption(Option.PROXY_URI)) {
+			var URI proxyUri = null
+			try {
+				proxyUri = new URI(msg.getFirstOption(Option.PROXY_URI).displayValue)
+			} catch (URISyntaxException e) {
+				System.err.printf("[" + getClass.getName + "] Failed to set URI: " + e.getMessage)
+				return
+			}
+			address = InetAddress.getByName(proxyUri.getHost)
+			if (proxyUri != null) {
+				port = proxyUri.getPort
+			} else {
+				port = DEFAULT_PORT
+			}
+		} else {
+			address = msg.getAddress
+			if(uri != null){
+				port = uri.getPort
+			}
 		}
 		if (port < 0){
 			port = DEFAULT_PORT
@@ -133,6 +151,7 @@ class UDPLayer extends Layer {
 		var timestamp = System.currentTimeMillis()
 		var data = Arrays.copyOfRange(datagram.getData, datagram.getOffset, datagram.getLength) 
 		var msg = Message.fromByteArray(data)
+		
 		msg.setTimestamp(timestamp)
 		var scheme = URI_SCHEME_NAME
 		var String 	userInfo 	= null

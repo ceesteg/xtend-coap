@@ -1,12 +1,22 @@
 package com.xtend.coap.utils
 
 import java.nio.ByteBuffer
-import java.util.Random
 
-import com.xtend.coap.message.MessageSender
-
+/**
+ * Class for hexadecimal operations. 
+ *
+ * @author César Estebas Gómez.
+ * @version Xtend-CoAP_v1.0.
+ */
 class HexUtils {
 
+	/**
+	 * Converts a long number to a numBytes-length byte array.
+	 * 
+	 * @param number Long value of the number to be converted.
+	 * @param numBytes The number of bytes to represent the number.
+	 * @return The number as byte array.
+	 */
     def static byte[] longToBytes(long number, int numBytes) {
     	var buffer = ByteBuffer.allocate(8)
         buffer.putLong(0, number)
@@ -20,6 +30,12 @@ class HexUtils {
         return aux
     }
 
+	/**
+	 * Converts a byte array to a long number.
+	 * 
+	 * @param bytes The byte array representation of the number.
+	 * @return The long value of the number.
+	 */
     def static long bytesToLong(byte[] bytes) {
     	var buffer = ByteBuffer.allocate(8)
 		for (var i=0; i < 8 - bytes.length; i++) {
@@ -31,6 +47,13 @@ class HexUtils {
 		return buffer.getLong(0)
     }
     
+    /**
+	 * Converts an integer number to a numBytes-length byte array.
+	 * 
+	 * @param number Integer value of the number to be converted.
+	 * @param numBytes The number of bytes to represent the number.
+	 * @return The number as byte array.
+	 */
     def static byte[] intToBytes(int number, int numBytes) {
     	var buffer = ByteBuffer.allocate(4)
         buffer.putInt(0, number)
@@ -44,6 +67,12 @@ class HexUtils {
         return aux
     }
 
+	/**
+	 * Converts a byte array to a integer number.
+	 * 
+	 * @param bytes The byte array representation of the number.
+	 * @return The integer value of the number.
+	 */
     def static int bytesToInt(byte[] bytes) {
     	var buffer = ByteBuffer.allocate(4)
         for (var i = 0; i < 4 - bytes.length; i++) {
@@ -54,17 +83,13 @@ class HexUtils {
 		}
 		return buffer.getInt(0)
     }
-    
-    def static void main(String[] args) {
-    	var random = new Random
-		var lengthInt = random.nextInt(4) + 1
-		var lengthLong = random.nextInt(4) + 5
-		var tokL = HexUtils.longToBytes(MessageSender.generateToken(lengthLong), lengthLong)
-		System.out.println(HexUtils.hex(HexUtils.intToBytes(MessageSender.generateToken(lengthInt).intValue, lengthInt)))
-    	System.out.println(HexUtils.hex(tokL))
-    	System.out.println(HexUtils.bytesToLong(tokL))
-    }
-	
+
+	/**
+	 * Hexadecimal representation of a byte array.
+	 * 
+	 * @param data The byte array to represent in hexadecimal.
+	 * @return String representation of the byte array.
+	 */	
 	def static String hex(byte[] data) {
 		val digits = "0123456789ABCDEF"
 		if (data != null) {

@@ -1,8 +1,14 @@
 package com.xtend.coap.utils
 
-import java.io.ByteArrayOutputStream
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 
+/**
+ * Class for work with datagrams. 
+ *
+ * @author César Estebas Gómez.
+ * @version Xtend-CoAP_v1.0.
+ */
 class DatagramUtils {
 	
 	ByteArrayInputStream byteInputStream
@@ -10,11 +16,10 @@ class DatagramUtils {
 	byte cByte  
 	int cBitIx 
 	
-	/*
-	 * Initializes a new BitReader object
+	/**
+	 * Initializes a new DatagramUtils object. If byteArray is null initializes byteOutputStream, else byteInputStream.
 	 * 
-	 * @param byteArray The byte array to read from. If is null initializes byteOutputStream, else byteInputStream.
-	 * 
+	 * @param byteArray The byte array to read from.
 	 */
 	new (byte[] byteArray) {
 		if (byteArray == null) {
@@ -28,17 +33,13 @@ class DatagramUtils {
 		}
 	}
 	
-	/*
-	 * Writes a sequence of bits to the stream
+	/**
+	 * Writes a sequence of bits to the stream.
 	 * 
-	 * @param data An integer containing the bits to write
-	 * @param nBits The number of bits to write
-	 * 
+	 * @param data An integer containing the bits to write.
+	 * @param nBits The number of bits to write.
 	 */
 	def write(int data, int nBits) {
-		if (nBits < 32 && data >= (1.operator_doubleLessThan(nBits))) {
-			System.out.println("[" + getClass.getName + "] Warning: Truncating value " + data + " to " + nBits + "-bit integer")
-		}
 		for (var i = nBits-1; i >= 0; i--) {
 			var validBit = data.operator_doubleGreaterThan(i).bitwiseAnd(1) != 0
 			if (validBit) {
@@ -51,10 +52,10 @@ class DatagramUtils {
 		}
 	}
 	
-	/*
-	 * Writes a sequence of bytes to the stream
+	/**
+	 * Writes a sequence of bytes to the stream.
 	 * 
-	 * @param bytes The sequence of bytes to write
+	 * @param bytes The sequence of bytes to write.
 	 */
 	def writeBytes(byte[] bytes) {
 		if (bytes == null) {
@@ -69,12 +70,11 @@ class DatagramUtils {
 		}
 	}
 	
-	/*
-	 * Reads a sequence of bits from the stream
+	/**
+	 * Reads a sequence of bits from the stream.
 	 * 
-	 * @param numBits The number of bits to read
-	 * @return An integer containing the bits read
-	 * 
+	 * @param numBits The number of bits to read.
+	 * @return An integer containing the bits read.
 	 */
 	def read(int nBits) {
 		var bRead = 0; 
@@ -92,12 +92,11 @@ class DatagramUtils {
 	}
 	
 	
-	/*
-	 * Reads a sequence of bytes from the stream
+	/**
+	 * Reads a sequence of bytes from the stream.
 	 * 
-	 * @param nBytes The number of bytes to read
-	 * @return The sequence of bytes read from the stream
-	 * 
+	 * @param nBytes The number of bytes to read.
+	 * @return The sequence of bytes read from the stream.
 	 */
 	def readBytes(int nBytes) {
 		var n = nBytes
@@ -115,8 +114,8 @@ class DatagramUtils {
 		return bRead
 	}
 	
-	/*
-	 * Writes pending bits to the stream
+	/**
+	 * Writes pending bits to the stream.
 	 */
 	def private void writeCurrentByte() {
 		if (cBitIx < Byte.SIZE-1) {
@@ -126,8 +125,8 @@ class DatagramUtils {
 		}
 	}
 	
-	/*
-	 * Reads new bits from the stream
+	/**
+	 * Reads new bits from the stream.
 	 */ 
 	def private void readCurrentByte() {
 		var value = byteInputStream.read
@@ -139,20 +138,19 @@ class DatagramUtils {
 		cBitIx = Byte.SIZE-1
 	}
 	
-	/*
-	 * Reads the complete sequence of bytes left in the stream
+	/**
+	 * Reads the complete sequence of bytes left in the stream.
 	 * 
-	 * @return The sequence of bytes left in the stream
-	 * 
+	 * @return The sequence of bytes left in the stream.
 	 */
 	def readBytesLeft() {
 		return readBytes(-1)
 	}
 	
-	/*
-	 * Returns a byte array containing the sequence of bits written
+	/**
+	 * Returns a byte array containing the sequence of bits written.
 	 * 
-	 * @Return The byte array containing the written bits
+	 * @Return The byte array containing the written bits.
 	 */
 	def toByteArray() {
 		writeCurrentByte
