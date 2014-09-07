@@ -1,0 +1,10 @@
+com.xtend.coap.endpoint
+com.xtend.coap.index
+com.xtend.coap.layers
+com.xtend.coap.message
+com.xtend.coap.message.request
+com.xtend.coap.message.response
+com.xtend.coap.resource
+com.xtend.coap.utils
+com.xtend.example
+com.xtend.test

@@ -13,3 +13,11 @@
 /.SampleHttpClient.java._trace
 /.BaseHTTP2CoAPProxy.java._trace
 /.SampleHTTP2CoAPProxy.java._trace
+/.MultiRequestClient.java._trace
+/.SampleCoAPSensor.java._trace
+/MultiRequestClient.java
+/SampleCoAP2HTTPProxy.java
+/SampleCoAPClient.java
+/SampleCoAPServer.java
+/SampleHTTP2CoAPProxy.java
+/SampleHttpClient.java

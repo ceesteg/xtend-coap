@@ -18,6 +18,12 @@ import com.xtend.coap.utils.DatagramUtils
 import com.xtend.coap.utils.ContentFormat
 import com.xtend.coap.utils.HexUtils
 
+/** 
+ * Class that represents a Message.
+ * 
+ * @author César Estebas Gómez.
+ * @version Xtend-CoAP_v1.0.
+ */
 class Message {
 	
 	val public static VER = 2
@@ -66,8 +72,7 @@ class Message {
 		this.tokenLength = tokenLength
 	}
 	
-	// Constructors ////////////////////////////////////////////////////////////
-	/*
+	/**
 	 * Default constructor for a new CoAP message
 	 */
 	new() { 
@@ -78,7 +83,7 @@ class Message {
 		this.payload_marker.set(0, 0xFF.byteValue)
 	}
 
-	/*
+	/**
 	 * Constructor for a new CoAP message
 	 * 
 	 * @param type The type of the CoAP message
@@ -90,7 +95,7 @@ class Message {
 		this.code = code
 	}	
 	
-	/*
+	/**
 	 * Constructor for a new CoAP message
 	 * 
 	 * @param uri The URI of the CoAP message
@@ -102,10 +107,6 @@ class Message {
 		this.messageID = id
 		this.payload = payload
 	}
-	
-
-	
-	// Static Functions ////////////////////////////////////////////////////////
 	
 	def newReply(boolean ack) {
 		var reply = new Message
@@ -143,7 +144,7 @@ class Message {
 		return rst
 	}
 	
-	/*
+	/**
 	 * Matches two messages to buddies if they have the same message ID
 	 * 
 	 * @param msg1 The first message
@@ -159,10 +160,8 @@ class Message {
 			return false
 		}
 	}
-	
-	// Serialization ///////////////////////////////////////////////////////////
 
-	/*
+	/**
 	 * Encodes the message into its raw binary representation
 	 * as specified in draft-ietf-core-coap-05, section 3.1
 	 * 
@@ -242,7 +241,7 @@ class Message {
 		return writer.toByteArray
 	}
 
-	/*
+	/**
 	 * Decodes the message from the its binary representation
 	 * as specified in draft-ietf-core-coap-05, section 3.1
 	 * 
@@ -290,14 +289,8 @@ class Message {
 		var bytesLeft = datagram.readBytesLeft
 		var aux = new DatagramUtils(bytesLeft)
 		datagram = new DatagramUtils(bytesLeft)
-//		if (aux.read(OPTION_DELTA) == 0x0) {
-//			end = true
-//		}
 		while (!end){
 			var optionDelta = datagram.read(OPTION_DELTA)
-//			if (optionDelta == 0x0) {
-//				end = true
-//			}
 			var optionLength = datagram.read(OPTION_LENGTH)
 			if (optionDelta == 0xD) {
 				optionDelta = datagram.read(OPTION_EXT_13) + 0xD
@@ -344,39 +337,24 @@ class Message {
 		return msg
 	}
 	
-	
-	// Procedures //////////////////////////////////////////////////////////////
-	
-	/*
+	/**
 	 * This procedure sets the URI of this CoAP message
 	 * 
 	 * @param uri The URI to which the current message URI should be set to
 	 */
-	def void setURI(URI uri) {
-		// include Uri Options as specified in 
-		// draft-ietf-core-coap-05, section 6.3
-		
-		// TODO unclear when/how to include Uri-Host and Uri-Port options
-		
+	def void setURI(URI uri) {		
 		if (uri != null) {
-
-			// set Uri-Path options
-			var path = uri.getPath();
+			var path = uri.getPath()
 			if (path != null && path.length() > 1) {
 				
-//				setOption(new Option(path.substring(1), Option.URI_PATH));
-				
-				var uriPaths = new ArrayList<Option>();
+				var uriPaths = new ArrayList<Option>()
 				for (String segment : path.split("/")) {
 					
-					// handle non-empty segments only
 					if (!segment.isEmpty()) {
-						
-						// create a new Uri-Path option from the segment
+					
 						var uriPath = new Option(segment, Option.URI_PATH)
 					
-						// add the option to the list
-						uriPaths.add(uriPath);
+						uriPaths.add(uriPath)
 					}
 				}
 				
@@ -384,19 +362,16 @@ class Message {
 
 			}
 			
-			// set Uri-Query options
-			var query = uri.getQuery();
+			var query = uri.getQuery()
 			if (query != null) {
 
-				// split the query into arguments
-				var uriQuery = new ArrayList<Option>();
+				var uriQuery = new ArrayList<Option>()
 				for (String argument : query.split("&")) {
 					
-					// create a new Uri-Query option from the argument
-					uriQuery.add(new Option(argument, Option.URI_QUERY));
+					uriQuery.add(new Option(argument, Option.URI_QUERY))
 				}
 				
-				setOptions(Option.URI_QUERY, uriQuery);
+				setOptions(Option.URI_QUERY, uriQuery)
 			}
 			this.uri = uri
 		}
@@ -412,7 +387,7 @@ class Message {
 		}
 	}
 	
-	/*
+	/**
 	 * This procedure sets the payload of this CoAP message
 	 * 
 	 * @param payload The payload to which the current message payload should
@@ -438,7 +413,7 @@ class Message {
 		setPayload(payload, ContentFormat.PLAIN)
 	}
 	
-	/*
+	/**
 	 * This procedure sets the type of this CoAP message
 	 * 
 	 * @param msgType The message type to which the current message type should
@@ -448,7 +423,7 @@ class Message {
 		this.type = msgType
 	}
 	
-	/*
+	/**
 	 * This procedure sets the code of this CoAP message
 	 * 
 	 * @param code The message code to which the current message code should
@@ -458,7 +433,7 @@ class Message {
 		this.code = code
 	}
 	
-	/*
+	/**
 	 * This procedure sets the ID of this CoAP message
 	 * 
 	 * @param id The message ID to which the current message ID should
@@ -468,9 +443,7 @@ class Message {
 		this.messageID = id
 	}
 	
-	// Functions ///////////////////////////////////////////////////////////////
-		
-	/*
+	/**
 	 * This function returns the URI of this CoAP message
 	 * 
 	 * @return The current URI
@@ -479,7 +452,7 @@ class Message {
 		return this.uri
 	}
 	
-	/*
+	/**
 	 * This function returns the payload of this CoAP message
 	 * 
 	 * @return The current payload.
@@ -501,7 +474,7 @@ class Message {
 		}
 	}
 	
-	/*
+	/**
 	 * This function returns the version of this CoAP message
 	 * 
 	 * @return The current version.
@@ -510,7 +483,7 @@ class Message {
 		return this.version
 	}
 	
-	/*
+	/**
 	 * This function returns the type of this CoAP message
 	 * 
 	 * @return The current type.
@@ -519,7 +492,7 @@ class Message {
 		return this.type
 	}
 	
-	/*
+	/**
 	 * This function returns the code of this CoAP message
 	 * 
 	 * @return The current code.
@@ -528,7 +501,7 @@ class Message {
 		return this.code
 	}
 	
-	/*
+	/**
 	 * This function returns the ID of this CoAP message
 	 * 
 	 * @return The current ID.
@@ -538,7 +511,7 @@ class Message {
 	}
 
 	
-	/*
+	/**
 	 * This procedure adds an option to the list of options of this CoAP message
 	 * 
 	 * @param opt The option which should be added to the list of options of the
@@ -554,7 +527,7 @@ class Message {
 		list.add(opt)
 	}	
 	
-	/*
+	/**
 	 * This function returns all options with the given option number
 	 * 
 	 * @param optionNumber The option number
@@ -564,7 +537,7 @@ class Message {
 		return optionMap.get(optionNumber)
 	}
 
-	/*
+	/**
 	 * Sets all options with the specified option number
 	 * 
 	 * @param optionNumber The option number
@@ -574,7 +547,7 @@ class Message {
 		optionMap.put(optionNumber, opt)
 	}
 	
-	/*
+	/**
 	 * Returns the first option with the specified option number
 	 * 
 	 * @param optionNumber The option number
@@ -589,7 +562,7 @@ class Message {
 		}
 	}
 	
-	/*
+	/**
 	 * Sets the option with the specified option number
 	 * 
 	 * @param opt The option to set
@@ -602,7 +575,7 @@ class Message {
 		}
 	}
 
-	/*
+	/**
 	 * Returns a sorted list of all included options
 	 * 
 	 * @return A sorted list of all options (copy)
@@ -610,11 +583,6 @@ class Message {
 	def getOptionList() {
 		var list = new ArrayList<Option>
 		for (List<Option> option : optionMap.values) {
-//			if (option.get(0).optionNumber == Option.URI_QUERY) {
-//				list.addAll(option)
-//			} else {
-//				list.add(option.get(0))
-//			}
 			for (Option opt : option) {
 				if (opt.getRawValue.length != 0) {
 					list.add(opt)
@@ -624,7 +592,7 @@ class Message {
 		return list
 	}	
 	
-	/*
+	/**
 	 * This function returns the number of options of this CoAP message
 	 * 
 	 * @return The current number of options.
@@ -633,7 +601,7 @@ class Message {
 		return getOptionList.size
 	}
 	
-	/*
+	/**
 	 * Appends data to this message's payload.
 	 * 
 	 * @param block The byte array containing the data to append
@@ -653,7 +621,7 @@ class Message {
 		}		
 	}
 	
-	/*
+	/**
 	 * Reads the byte at the given position from the payload and blocks
 	 * if the data is not yet available.
 	 * 
@@ -681,7 +649,7 @@ class Message {
 		}
 	}
 	
-	/*
+	/**
 	 * Checks whether the message is complete, i.e. its payload
 	 * was completely received.
 	 * 
@@ -691,7 +659,7 @@ class Message {
 		return complete
 	}
 	
-	/*
+	/**
 	 * Sets the complete flag of this message.
 	 * 
 	 * @param complete The value of the complete flag
@@ -703,7 +671,7 @@ class Message {
 		}
 	}
 	
-	/*
+	/**
 	 * Sets the timestamp associated with this message.
 	 * 
 	 * @param timestamp The new timestamp, in milliseconds
@@ -712,7 +680,7 @@ class Message {
 		this.timestamp = timestamp
 	}
 	
-	/*
+	/**
 	 * Returns the timestamp associated with this message.
 	 * 
 	 * @return The timestamp of the message, in milliseconds
@@ -721,7 +689,7 @@ class Message {
 		return timestamp
 	}
 	
-	/*
+	/**
 	 * Notification method that is called when the message's complete flag
 	 * changed to true.
 	 * 
@@ -729,7 +697,7 @@ class Message {
 	 */
 	def void completed() { }
 	
-	/*
+	/**
 	 * Notification method that is called when the transmission of this
 	 * message was cancelled due to timeout.
 	 * 
@@ -737,7 +705,7 @@ class Message {
 	 */
 	def void timedOut() { }
 	
-	/*
+	/**
 	 * Notification method that is called whenever payload was appended
 	 * using the appendPayload() method.
 	 * 
@@ -747,7 +715,7 @@ class Message {
 	 */
 	def void payloadAppended(byte[] block) { }
 	
-	/*
+	/**
 	 * This function returns the buddy of this CoAP message
 	 * Two messages are buddies iif they have the same message ID
 	 * 
@@ -772,7 +740,7 @@ class Message {
 		}
 	}
 	
-	/*
+	/**
 	 * This function checks if the message is a request message
 	 * 
 	 * @return True if the message is a request
@@ -781,7 +749,7 @@ class Message {
 		return Code.isRequest(code)
 	}
 	
-	/*
+	/**
 	 * This function checks if the message is a response message
 	 * 
 	 * @return True if the message is a response
@@ -866,27 +834,39 @@ class Message {
 	}
 	
 	def void log() {
-		System.out.println("==[COAP MESSAGE]======================================")
+		System.out.println("==============================================================")
+		System.out.println("|                        COAP MESSAGE                        |")
+		System.out.println("|------------------------------------------------------------|")
 		var options = getOptionList
 		var uriVal = "NULL"
 		if (uri != null) {
 			uriVal = uri.toString
 		}
-		System.out.println("URI    : " + uriVal)
-		System.out.println("ID     : " + messageID)
-		System.out.println("Type   : " + typeString)
-		System.out.println("Code   : " + Code.toString(code))
-		System.out.println("Token  : " + HexUtils.hex(HexUtils.longToBytes(getToken, getTokenLength)))
-		System.out.println("Options: " + options.size)
+		System.out.println("| URI            : " + uriVal + printBlank(60 - 18 - uriVal.length) + "|")
+		System.out.println("| Message ID     : " + messageID + printBlank(60 - 18 - String.valueOf(messageID).length) + "|")
+		System.out.println("| Message Type   : " + typeString + printBlank(60 - 18 - typeString.length) + "|")
+		var stCode = Code.toString(code)
+		System.out.println("| CoAP Code      : " + stCode + printBlank(60 - 18 - stCode.length) + "|")
+		var stToken = HexUtils.hex(HexUtils.longToBytes(getToken, getTokenLength))
+		System.out.println("| Token          : " + stToken + printBlank(60 - 18 - stToken.length) + "|")
+		System.out.println("| Options: " + options.size + printBlank(60 - 10 - String.valueOf(options.size).length) + "|")
 		for (Option opt : options) {
-			System.out.println("  * " + opt.getName + ": " + opt.getDisplayValue + " (" + opt.getLength + " Bytes)")
+			var noBlank = 10 + opt.getName.length + opt.getDisplayValue.length + String.valueOf(opt.getLength).length
+			System.out.println("|  * " + opt.getName + ": " + opt.getDisplayValue + " (" + opt.getLength + " Bytes)" + printBlank(60 - noBlank) + "|")
 		}
-		System.out.println("Payload: " + payloadSize + " Bytes")
-		System.out.println("------------------------------------------------------")
+		System.out.println("| Payload: " + payloadSize + " Bytes" + printBlank(60 - 16 - String.valueOf(payloadSize).length) + "|") 
+		System.out.println("==============================================================")
 		if (payloadSize > 0) {
 			System.out.println(getPayloadString)
 		}
-		System.out.println("======================================================")
+	}
+	
+	def private printBlank(int num) {
+		var ret = ""
+		for (var i = 0; i < num; i++) {
+			ret += " "
+		}
+		return ret
 	}
 	
 	def endpointID() {
@@ -906,7 +886,7 @@ class Message {
 		return host + ":" + port
 	}
 	
-	/*
+	/**
 	 * Returns a string that is assumed to uniquely identify a message
 	 * 
 	 * Note that for incoming messages, the message ID is not sufficient
@@ -928,7 +908,7 @@ class Message {
 		return InetAddress.getByName(host)
 	}
 	
-	/*
+	/**
 	 * This method is overridden by subclasses according to the Visitor Pattern
 	 *
 	 * @param handler A handler for this message

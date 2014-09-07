@@ -6,3 +6,10 @@
 /.BaseProxy.java._trace
 /.BaseCoAP2HTTPProxy.java._trace
 /.BaseHTTP2CoAPProxy.java._trace
+/.BaseClient.java._trace
+/.BaseCoAPServer.java._trace
+/.BaseCoAPSensor.java._trace
+/BaseHTTP2CoAPProxy.java
+/EndPoint.java
+/BaseCoAP2HTTPProxy.java
+/BaseCoAPServer.java

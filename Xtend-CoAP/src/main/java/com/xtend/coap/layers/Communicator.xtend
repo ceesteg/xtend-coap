@@ -7,6 +7,12 @@ import com.xtend.coap.message.Message
 import com.xtend.coap.message.response.Response
 import com.xtend.coap.message.request.Request
  
+/** 
+ * Class that represents a CoAP Communicator.
+ * 
+ * @author César Estebas Gómez.
+ * @version Xtend-CoAP_v1.0.
+ */ 
 class Communicator extends UpperLayer {
 
 	public final static int DEFAULT_PORT = UDPLayer.DEFAULT_PORT
@@ -15,10 +21,8 @@ class Communicator extends UpperLayer {
 	protected TransactionLayer transactionLayer
 	protected MessageLayer messageLayer
 	protected UDPLayer udpLayer
-	
-	// Constructors ////////////////////////////////////////////////////////////
-	
-	/*
+
+	/**
 	 * Constructor for a new Communicator
 	 * 
 	 * @param port The local UDP port to listen for incoming messages
@@ -30,7 +34,7 @@ class Communicator extends UpperLayer {
 		buildStack
 	}
 
-	/*
+	/**
 	 * Constructor for a new Communicator
 	 * 
 	 */
@@ -38,9 +42,7 @@ class Communicator extends UpperLayer {
 		this(0, true)
 	}
 	
-	// Internal ////////////////////////////////////////////////////////////////
-	
-	/*
+	/**
 	 * This method connects the layers in order to build the communication stack
 	 * 
 	 * It can be overridden by subclasses in order to add further layers, e.g.
@@ -53,8 +55,6 @@ class Communicator extends UpperLayer {
 		messageLayer.setLowerLayer(udpLayer)
 		
 	}
-	
-	// I/O implementation //////////////////////////////////////////////////////
 	
 	@Override
 	override protected void doSendMessage(Message msg) throws IOException {

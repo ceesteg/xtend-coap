@@ -16,6 +16,12 @@ import com.xtend.coap.utils.MessageType
 import com.xtend.coap.utils.Code
 import com.xtend.coap.utils.Option
 
+/** 
+ * Class that represents a Request.
+ * 
+ * @author César Estebas Gómez.
+ * @version Xtend-CoAP_v1.0.
+ */
 class Request extends Message {
 	
 	val static TIMEOUT_RESPONSE = new Response
@@ -27,11 +33,11 @@ class Request extends Message {
 	BlockingQueue<Response> responseQueue
 	int responseCount
 
-	/*
-	 * Constructor for a new CoAP message
+	/**
+	 * Constructor for a new Request.
 	 * 
-	 * @param code The method code of the message
-	 * @param confirmable True if the request is to be sent as a Confirmable
+	 * @param code The method code of the message.
+	 * @param confirmable True if the request is to be sent as a Confirmable.
 	 */	
 	new(String code, boolean confirmable) {
 		if(confirmable){
@@ -42,7 +48,7 @@ class Request extends Message {
 		this.code = code
 	}
 	
-	/*
+	/**
 	 * Executes the request on the endpoint specified by the URI
 	 * 
 	 */
@@ -58,7 +64,7 @@ class Request extends Message {
 		}
 	}
 	
-	/*
+	/**
 	 * Places a new response to this request, e.g. to answer it
 	 * 
 	 * @param response A response to this request
@@ -103,6 +109,12 @@ class Request extends Message {
 		responseCount++
 	}
 	
+	/**
+	 * Places a new response to this request, e.g. to answer it
+	 * 
+	 * @param code The method code of the message.
+	 * @param message The payload content of the message.
+	 */
 	def void respond(String code, String message) {
 		var response = new Response(code)
 		if (message != null) {
@@ -111,6 +123,11 @@ class Request extends Message {
 		respond(response)
 	}
 
+	/**
+	 * Places a new response to this request, e.g. to answer it
+	 * 
+	 * @param code The method code of the message.
+	 */
 	def void respond(String code) {
 		respond(code, null)
 	}
@@ -135,12 +152,9 @@ class Request extends Message {
 		this.communicator = communicator
 	}
 	
-	/*
+	/**
 	 * Returns a response that was placed using respond() and
 	 * blocks until such a response is available.
-	 * 
-	 * NOTE: In order to safely use this method, the call useResponseQueue(true)
-	 * is required BEFORE any possible respond() calls take place
 	 * 
 	 * @return The next response that was placed using respond()
 	 */
@@ -164,7 +178,7 @@ class Request extends Message {
 		}
 	}
 
-	/*
+	/**
 	 * Registers a handler for responses to this request
 	 * 
 	 * @param handler The observer to add to the handler list
@@ -178,7 +192,7 @@ class Request extends Message {
 		}
 	}
 
-	/*
+	/**
 	 * Unregisters a handler for responses to this request
 	 * 
 	 * @param handler The observer to remove from the handler list
@@ -189,11 +203,8 @@ class Request extends Message {
 		}
 	}
 
-	/*
+	/**
 	 * Enables or disables the response queue
-	 * 
-	 * NOTE: The response queue needs to be enabled BEFORE any possible
-	 *       calls to receiveResponse()
 	 * 
 	 * @param enable True to enable and false to disable the response queue,
 	 * respectively
@@ -207,21 +218,16 @@ class Request extends Message {
 		}
 	}
 	
-	/*
+	/**
 	 * Checks if the response queue is enabled
-	 * 
-	 * NOTE: The response queue needs to be enabled BEFORE any possible
-	 *       calls to receiveResponse()
 	 * 
 	 * @return True iff the response queue is enabled
 	 */	
 	def responseQueueEnabled() {
 		return responseQueue != null
 	}	
-	
-	// Subclassing /////////////////////////////////////////////////////////////
-	
-	/*
+
+	/**
 	 * This method is called whenever a response was placed to this request.
 	 * Subclasses can override this method in order to handle responses.
 	 * 
@@ -244,7 +250,7 @@ class Request extends Message {
 	
 	def responseCompleted(Response response) { }
 	
-	/*
+	/**
 	 * Direct subclasses need to override this method in order to invoke
 	 * the according method of the provided RequestHandler (visitor pattern)
 	 * 
@@ -259,9 +265,7 @@ class Request extends Message {
 		handler.handleRequest(this)
 	}
 	
-	// Class functions /////////////////////////////////////////////////////////
-
-	/*
+	/**
 	 * Returns the default communicator used for outgoing requests
 	 * 
 	 * @return The default communicator
@@ -277,7 +281,7 @@ class Request extends Message {
 		return DEFAULT_COMM
 	}
 	
-		/*
+	/**
 	 * Instantiates a new request based on a string describing a method.
 	 * 
 	 * @return A new request object, or null if method not recognized
@@ -299,4 +303,72 @@ class Request extends Message {
 			return null
 		}
 	}
+}
+
+/** 
+ * Class that represents a Get Request.
+ * 
+ * @author César Estebas Gómez.
+ * @version Xtend-CoAP_v1.0.
+ */
+class GetRequest extends Request {
+	new() {
+		super(Code.METHOD_GET, true)
+	}
+	
+	@Override
+	override void dispat(RequestHandler handler) {
+		handler.performGet(this)
+	}
+}
+
+/** 
+ * Class that represents a Post Request.
+ * 
+ * @author César Estebas Gómez.
+ * @version Xtend-CoAP_v1.0.
+ */
+class PostRequest extends Request {
+	new() {
+		super(Code.METHOD_POST, true)
+	}
+	
+	@Override
+	override void dispat(RequestHandler handler) {
+		handler.performPost(this)
+	}
+}
+
+/** 
+ * Class that represents a Put Request.
+ * 
+ * @author César Estebas Gómez.
+ * @version Xtend-CoAP_v1.0.
+ */
+class PutRequest extends Request {
+	new() {
+		super(Code.METHOD_PUT, true)
+	}
+	
+	@Override
+	override void dispat(RequestHandler handler) {
+		handler.performPut(this)
+	}
+}
+
+/** 
+ * Class that represents a Delete Request.
+ * 
+ * @author César Estebas Gómez.
+ * @version Xtend-CoAP_v1.0.
+ */
+class DeleteRequest extends Request {
+	new() {
+		super(Code.METHOD_DELETE, true)
+	}
+	
+	@Override
+	override void dispat(RequestHandler handler) {
+		handler.performDelete(this)
+	}	
 }

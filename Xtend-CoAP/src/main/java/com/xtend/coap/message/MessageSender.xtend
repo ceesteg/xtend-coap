@@ -6,6 +6,12 @@ import com.xtend.coap.message.request.Request
 import com.xtend.coap.layers.Communicator
 import java.net.SocketException
 
+/** 
+ * Class that represents a Message Sender.
+ * 
+ * @author César Estebas Gómez.
+ * @version Xtend-CoAP_v1.0.
+ */
 class MessageSender {
 	
 	static int messageID = 0
@@ -21,6 +27,13 @@ class MessageSender {
 		return this.communicator
 	}
 	
+	/** 
+	 * This method gets the ID for a new message.
+	 * 
+	 * @param typeEndpoint The type of End Point. It must be C for Client, S for Server and P for Proxy.
+	 * 
+	 * @return The ID for a new message.
+	 */
 	def static int nextMessageID(String typeEndpoint) {
 		if (messageID == 0) {
 			resetMessageID(typeEndpoint)
@@ -46,6 +59,13 @@ class MessageSender {
 		}
 	}
 	
+	/** 
+	 * This method generates a new Token.
+	 * 
+	 * @param length The length of the Token.
+	 * 
+	 * @return The Token generated.
+	 */
 	def static long generateToken(int length) {
 		var random = new Random
 		var long token = 0
@@ -56,6 +76,11 @@ class MessageSender {
 		return token
 	}
 	
+	/** 
+	 * This method generates a new Token for a Request.
+	 * 
+	 * @param request The request that takes the Token.
+	 */
 	def static void generateTokenForRequest(Request request) {
 		var random = new Random
 		var length = random.nextInt(3) + 5

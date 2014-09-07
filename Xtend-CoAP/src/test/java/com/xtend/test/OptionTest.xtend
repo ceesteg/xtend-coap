@@ -18,13 +18,11 @@ class OptionTest {
 	
 	@Test
 	def testIntOption() {
-		var oneByteValue = 255 
-		var twoBytesValue = 256 
+		var oneByteValue = 255
+		var twoBytesValue = 256
 		var nrRef = 1
 		var optOneByte = new Option(oneByteValue, nrRef)
 		var optTwoBytes = new Option(twoBytesValue, nrRef)
-		assertEquals(1, optOneByte.getLength)
-		assertEquals(2, optTwoBytes.getLength)
 		assertEquals(255, optOneByte.getIntValue)
 		assertEquals(256, optTwoBytes.getIntValue)
 	}
