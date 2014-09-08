@@ -1,4 +1,3 @@
-package com.xtend.examples;
 
 import com.google.common.base.Objects;
 import com.xtend.coap.message.Message;
