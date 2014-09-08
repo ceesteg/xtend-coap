@@ -851,13 +851,13 @@ class Message {
 		System.out.println("| Token          : " + stToken + printBlank(60 - 18 - stToken.length) + "|")
 		System.out.println("| Options: " + options.size + printBlank(60 - 10 - String.valueOf(options.size).length) + "|")
 		for (Option opt : options) {
-			var noBlank = 10 + opt.getName.length + opt.getDisplayValue.length + String.valueOf(opt.getLength).length
+			var noBlank = 15 + opt.getName.length + opt.getDisplayValue.length + String.valueOf(opt.getLength).length
 			System.out.println("|  * " + opt.getName + ": " + opt.getDisplayValue + " (" + opt.getLength + " Bytes)" + printBlank(60 - noBlank) + "|")
 		}
-		System.out.println("| Payload: " + payloadSize + " Bytes" + printBlank(60 - 16 - String.valueOf(payloadSize).length) + "|") 
-		System.out.println("==============================================================")
+		System.out.println("| Payload length: " + payloadSize + " Bytes" + printBlank(60 - 23 - String.valueOf(payloadSize).length) + "|") 
+		System.out.println("==============================================================\r\n")
 		if (payloadSize > 0) {
-			System.out.println(getPayloadString)
+			System.out.println("Payload: " + getPayloadString + "\r\n")
 		}
 	}
 	
